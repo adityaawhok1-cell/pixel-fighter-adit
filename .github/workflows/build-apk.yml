@@ -38,16 +38,43 @@ jobs:
           assert n==1,'style AppTheme.NoActionBar tidak ditemukan'
           open(p,'w',encoding='utf-8').write(s)
           PY
-          # 3) sembunyikan status bar & nav bar (immersive)
+          # 3) immersive + cegah gestur tepi layar menutup aplikasi + back 2x untuk keluar
           cat > $A/java/com/pixelfighter/game/MainActivity.java <<'JAVA'
           package com.pixelfighter.game;
 
+          import android.graphics.Rect;
+          import android.os.Build;
+          import android.view.View;
+          import android.widget.Toast;
+          import androidx.activity.OnBackPressedCallback;
           import androidx.core.view.WindowCompat;
           import androidx.core.view.WindowInsetsCompat;
           import androidx.core.view.WindowInsetsControllerCompat;
           import com.getcapacitor.BridgeActivity;
+          import java.util.ArrayList;
+          import java.util.List;
 
           public class MainActivity extends BridgeActivity {
+            private long lastBack = 0;
+
+            @Override
+            public void onStart() {
+              super.onStart();
+              getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+                @Override
+                public void handleOnBackPressed() {
+                  long now = System.currentTimeMillis();
+                  if (now - lastBack < 1500) {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                  } else {
+                    lastBack = now;
+                    Toast.makeText(MainActivity.this, "Tekan KEMBALI sekali lagi untuk keluar", Toast.LENGTH_SHORT).show();
+                  }
+                }
+              });
+            }
+
             @Override
             public void onWindowFocusChanged(boolean hasFocus) {
               super.onWindowFocusChanged(hasFocus);
@@ -55,7 +82,24 @@ jobs:
                 WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
                 c.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
                 c.hide(WindowInsetsCompat.Type.systemBars());
+                excludeEdges();
               }
+            }
+
+            private void excludeEdges() {
+              if (Build.VERSION.SDK_INT < 29) return;
+              final View v = getWindow().getDecorView();
+              v.post(new Runnable() {
+                @Override
+                public void run() {
+                  int w = v.getWidth(), h = v.getHeight();
+                  int edge = (int) (48 * v.getResources().getDisplayMetrics().density);
+                  List<Rect> r = new ArrayList<>();
+                  r.add(new Rect(0, 0, edge, h));
+                  r.add(new Rect(w - edge, 0, w, h));
+                  v.setSystemGestureExclusionRects(r);
+                }
+              });
             }
           }
           JAVA
