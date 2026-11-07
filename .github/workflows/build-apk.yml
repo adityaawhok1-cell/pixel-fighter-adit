@@ -1,4 +1,3 @@
-
 name: Build APK
 on:
   push:
@@ -62,22 +61,13 @@ jobs:
           JAVA
           # 4) ikon & splash
           [ -f res-overrides.zip ] && unzip -oq res-overrides.zip -d $A/res || true
-          # 5) versionCode naik otomatis (harus > 20 agar bisa update APK lama)
+          # 5) versionCode naik otomatis
           sed -i -E "s/versionCode [0-9]+/versionCode $((100 + GITHUB_RUN_NUMBER))/" android/app/build.gradle
 
       - name: Build
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
 
-      - name: Tanda tangan dengan kunci tetap
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ks.jks
-          BT=$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
-          $ANDROID_HOME/build-tools/$BT/apksigner sign \
-            --ks ks.jks --ks-key-alias pixelfighter \
-            --ks-pass pass:${{ secrets.KS_PASS }} --key-pass pass:${{ secrets.KS_PASS }} \
-            --out pixel-fighter.apk android/app/build/outputs/apk/debug/app-debug.apk
-
       - uses: actions/upload-artifact@v4
         with:
           name: pixel-fighter-apk
-          path: pixel-fighter.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
