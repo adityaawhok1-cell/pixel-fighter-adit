@@ -1,1 +1,83 @@
 
+name: Build APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+
+      - name: Buat project Android
+        run: |
+          npm install
+          npx cap add android
+          npx cap sync android
+
+      - name: Terapkan landscape, fullscreen, ikon
+        run: |
+          A=android/app/src/main
+          # 1) kunci landscape
+          sed -i '0,/<activity/s//<activity android:screenOrientation="sensorLandscape"/' $A/AndroidManifest.xml
+          # 2) tema gelap + fullscreen + isi area notch
+          python3 - <<'PY'
+          import re
+          p='android/app/src/main/res/values/styles.xml'
+          s=open(p,encoding='utf-8').read()
+          items=('<item name="android:windowFullscreen">true</item>'
+                 '<item name="android:windowBackground">#05050F</item>'
+                 '<item name="android:statusBarColor">#05050F</item>'
+                 '<item name="android:navigationBarColor">#05050F</item>'
+                 '<item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>')
+          s,n=re.subn(r'(<style name="AppTheme\.NoActionBar"[^>]*>)',r'\1'+items,s,count=1)
+          assert n==1,'style AppTheme.NoActionBar tidak ditemukan'
+          open(p,'w',encoding='utf-8').write(s)
+          PY
+          # 3) sembunyikan status bar & nav bar (immersive)
+          cat > $A/java/com/pixelfighter/game/MainActivity.java <<'JAVA'
+          package com.pixelfighter.game;
+
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+            @Override
+            public void onWindowFocusChanged(boolean hasFocus) {
+              super.onWindowFocusChanged(hasFocus);
+              if (hasFocus) {
+                WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+                c.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                c.hide(WindowInsetsCompat.Type.systemBars());
+              }
+            }
+          }
+          JAVA
+          # 4) ikon & splash
+          [ -f res-overrides.zip ] && unzip -oq res-overrides.zip -d $A/res || true
+          # 5) versionCode naik otomatis (harus > 20 agar bisa update APK lama)
+          sed -i -E "s/versionCode [0-9]+/versionCode $((100 + GITHUB_RUN_NUMBER))/" android/app/build.gradle
+
+      - name: Build
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+
+      - name: Tanda tangan dengan kunci tetap
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ks.jks
+          BT=$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
+          $ANDROID_HOME/build-tools/$BT/apksigner sign \
+            --ks ks.jks --ks-key-alias pixelfighter \
+            --ks-pass pass:${{ secrets.KS_PASS }} --key-pass pass:${{ secrets.KS_PASS }} \
+            --out pixel-fighter.apk android/app/build/outputs/apk/debug/app-debug.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pixel-fighter-apk
+          path: pixel-fighter.apk
