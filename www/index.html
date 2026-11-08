@@ -2793,7 +2793,7 @@ function netStatus(st){
     NET.conn=true;NET.lastRecv=performance.now();
     if(NET.role==='client')netSend('H'+NET.sid);
     if(NET.lock){NET.reconnectUntil=0;netWinReset(netSettle());toast('TERSAMBUNG KEMBALI');netFlush();return}
-    if(NET.role==='host'){vs2p=true;document.body.classList.add('nethost');toast('TEMAN TERHUBUNG');NET.myPick=(CHAR_IDS.includes(selId)&&!(CHARS[selId]&&CHARS[selId].custom))?selId:'adit';if(!CHAR_IDS.includes(NET.peerPick))NET.peerPick='waluyo';trainPick=false;lastPick='foe';go('select');netSend('K'+NET.myPick);netSend('W'+NET.hcMode)}
+    if(NET.role==='host'){modePick=null;MODE=null;vs2p=true;document.body.classList.add('nethost');toast('TEMAN TERHUBUNG');NET.myPick=(CHAR_IDS.includes(selId)&&!(CHARS[selId]&&CHARS[selId].custom))?selId:'adit';if(!CHAR_IDS.includes(NET.peerPick))NET.peerPick='waluyo';trainPick=false;lastPick='foe';go('select');netSend('K'+NET.myPick);netSend('W'+NET.hcMode)}
     else if(NET.role==='client'){netClientEnter()}
   }else if(st==='closed'){
     const was=NET.conn;NET.conn=false;
@@ -2842,7 +2842,7 @@ function netRecv(m){
 }
 function netClientTo(sc){NET.lock=false;NetLocal.clear();Input.clear();Input2.clear();if(state==='play'||state==='pause'||state==='result'||state==='settings'||state==='netplay')G=null;
   netMsg('');trainPick=false;selId=NET.myPick;foeSelId=NET.peerPick;go(sc)}
-function netClientEnter(){NET.img=null;document.body.classList.add('netclient','touchui');document.body.classList.remove('twop','split');
+function netClientEnter(){modePick=null;MODE=null;NET.img=null;document.body.classList.add('netclient','touchui');document.body.classList.remove('twop','split');
   NET.myPick=(CHAR_IDS.includes(selId)&&!(CHARS[selId]&&CHARS[selId].custom))?selId:'adit';if(!CHAR_IDS.includes(NET.peerPick))NET.peerPick='waluyo';lastPick='me';
   netClientTo('select');netSend('K'+NET.myPick)}
 function netLeave(){const wasCl=NET.role==='client';
@@ -6111,7 +6111,7 @@ function refreshSelect(){
   $('selName').textContent=ch.name;$('foeName').textContent=foe.name;
   const stats=(el,c)=>{const lab=['POWER','SPEED','GUARD'];el.innerHTML=lab.map((l,i)=>'<div class="stat"><span>'+l+'</span><b>'+[0,1,2,3,4].map(k=>'<i class="'+(k<c.stats[i]?'on':'')+'"></i>').join('')+'</b></div>').join('')};
   stats($('selStats'),ch);stats($('foeStats'),foe);
-  {const nt=!!(NET.role&&NET.conn&&!trainPick),b=$('btnMode');b.style.display=(trainPick||nt)?'none':'';b.textContent=vs2p?'LAWAN: PLAYER 2':'LAWAN: AI';b.classList.toggle('gold',!vs2p);b.classList.toggle('green',vs2p);$('foeHead').textContent=nt?(NET.role==='host'?'PLAYER 2 (TEMAN)':'LAWAN (HOST)'):((vs2p&&!trainPick)?'PILIH PLAYER 2':'PILIH MUSUH');document.querySelectorAll('#sc-select [data-act="foe-prev"],#sc-select [data-act="foe-next"]').forEach(e=>{e.style.visibility=nt?'hidden':''});const ta=document.querySelector('#sc-select [data-act="to-arena"]');if(ta)ta.textContent=(nt&&NET.role==='client')?'MENUNGGU HOST...':'PILIH ARENA >';const nb=$('netModeBtn');if(nb){nb.style.display=nt?'':'none';nb.textContent='MODE: '+['1V1','2V2','3V3','BATTLE ROYALE'][NET.hcMode|0]}}
+  {const nt=!!(NET.role&&NET.conn&&!trainPick),b=$('btnMode');b.style.display=(trainPick||nt)?'none':'';b.textContent=vs2p?'LAWAN: PLAYER 2':'LAWAN: AI';b.classList.toggle('gold',!vs2p);b.classList.toggle('green',vs2p);$('foeHead').textContent=nt?(NET.role==='host'?'PLAYER 2 (TEMAN)':'LAWAN (HOST)'):((vs2p&&!trainPick)?'PILIH PLAYER 2':'PILIH MUSUH');document.querySelectorAll('#sc-select [data-act="foe-prev"]:not(canvas),#sc-select [data-act="foe-next"]:not(canvas)').forEach(e=>{e.style.visibility=nt?'hidden':''});{const fp=$('fPortrait');if(fp){fp.style.visibility='';fp.style.pointerEvents=nt?'none':''}}const ta=document.querySelector('#sc-select [data-act="to-arena"]');if(ta)ta.textContent=(nt&&NET.role==='client')?'MENUNGGU HOST...':'PILIH ARENA >';const nb=$('netModeBtn');if(nb){nb.style.display=nt?'':'none';nb.textContent='MODE: '+['1V1','2V2','3V3','BATTLE ROYALE'][NET.hcMode|0]}}
 }
 function refreshArena(){
   $('arenaVs').textContent=(trainPick?'LATIHAN: ':'')+CHARS[selId].name+' VS '+CHARS[foeSelId].name;
@@ -6280,7 +6280,7 @@ function onClick(e){
     if(NET.role==='host'&&(a==='foe-prev'||a==='foe-next')){toast('PLAYER 2 MEMILIH SENDIRI');return}
     if(NET.role==='client'){
       if(a==='back-menu'){netLeave();go('menu');return}
-      if(['foe-prev','foe-next','mode-toggle','to-arena','map-prev','map-next','map-pick','start','to-select','net-mode'].includes(a)){toast('MENUNGGU HOST');return}
+      if(['foe-prev','foe-next','mode-toggle','to-arena','map-prev','map-next','map-pick','start','to-select','net-mode','net-br'].includes(a)){toast('MENUNGGU HOST');return}
     }
   }
   switch(a){
@@ -6300,12 +6300,12 @@ function onClick(e){
    case 'map-pick':mapPick=v;refreshArena();break;
    case 'map-prev':case 'map-next':{const i=Math.max(0,MAP_LIST.findIndex(q=>q.id===mapPick));mapPick=MAP_LIST[(i+(a==='map-next'?1:-1)+MAP_LIST.length)%MAP_LIST.length].id;refreshArena();break}
    case 'mode-toggle':if(NET.role==='host'&&NET.conn){toast('MODE 2P DIKUNCI SAAT MULTIPLAYER');break}vs2p=!vs2p;refreshSelect();break;
-   case 'to-arena':if(modePick){modeBegin();break}go('arena');break;
+   case 'to-arena':if(NET.role&&NET.conn&&modePick){modePick=null;MODE=null}if(modePick){modeBegin();break}go('arena');break;
    case 'to-select':go('select');break;
    case 'foe-prev':case 'foe-next':{lastPick='foe';const opts=CHAR_IDS,i=opts.indexOf(foeSelId);foeSelId=opts[(i+(a==='foe-next'?1:-1)+opts.length)%opts.length];if(modePick==='hc')hcSlots[hcSel.a]=foeSelId;refreshSelect();break;}
    case 'sel-prev':case 'sel-next':{lastPick='me';const i=CHAR_IDS.indexOf(selId);selId=CHAR_IDS[(i+(a==='sel-next'?1:-1)+CHAR_IDS.length)%CHAR_IDS.length];refreshSelect();if(NET.role&&NET.conn&&!NET.lock&&!trainPick){NET.myPick=selId;netSend('K'+selId)}break}
    case 'net-mode':if(NET.role==='host'&&NET.conn){NET.hcMode=((NET.hcMode|0)+1)%4;netSend('W'+NET.hcMode);refreshSelect()}break;
-   case 'start':if(NET.role==='host'&&NET.conn&&!trainPick&&!modePick){netHcLaunch();break}if(modePick==='hc'){hcMe=selId;hcStart();break}startMatch(selId,trainPick,foeSelId);break;
+   case 'start':if(NET.role==='host'&&NET.conn&&!trainPick){modePick=null;MODE=null;netHcLaunch();break}if(modePick==='hc'){hcMe=selId;hcStart();break}startMatch(selId,trainPick,foeSelId);break;
    case 'cos-char':cosChar=v;refreshCostume();break;
    case 'cos-cprev':case 'cos-cnext':{const L=['adit','waluyo','spiderman','ninja','sari','laras','maya'],i=Math.max(0,L.indexOf(cosChar));cosChar=L[(i+(a==='cos-cnext'?1:-1)+L.length)%L.length];refreshCostume();break}
    case 'cos-part':cosPart=+v;refreshCostume();break;
@@ -6329,6 +6329,7 @@ function onClick(e){
    case 'm-arcade':case 'm-survival':modeOff();modePick=a==='m-arcade'?'arcade':'survival';lastPick='foe';trainPick=false;selId='adit';tryLandscape();go('select');selBtn(modePick==='arcade'?'ARCADE':'SURVIVAL');break;
    case 'hc-slot':hcCycle(+v);break;
    case 'br-set':brSet(v);break;
+   case 'net-br':if(NET.role==='host'&&NET.conn){netBrSet(v)}break;
    case 'hc-rand':hcSlots=hcSlots.map(()=>null);refreshSelect();break;
    case 'm-hc':modeOff();go('hc');break;
    case 'hc-2v2':case 'hc-3v3':case 'hc-br':hcPick(a);break;
@@ -7169,6 +7170,9 @@ function netHcBuild(cfg){
   newRound();if(br)for(const f of fs)f.bd=1/(cfg.tf||1);
   toast(hcLabel(g.hc));
 }
+function netBrSet(k){if(k==='n')brCfg.n=BR_N[(BR_N.indexOf(brCfg.n)+1)%BR_N.length];else if(k==='z')brCfg.z=(brCfg.z+1)%BR_ZONE.length;else if(k==='t')brCfg.t=(brCfg.t+1)%BR_TUF.length;else brCfg.d=(brCfg.d+1)%BR_DROP.length;HC_FMT['hc-br'].e=brCfg.n-1;LS.set('pf_br_v1',brCfg);refreshSelect()}
+{const _rsNm=refreshSelect;refreshSelect=function(){_rsNm();
+  if(NET.role==='host'&&NET.conn&&!trainPick&&(NET.hcMode|0)===3){const sa=$('selStats');if(sa){const bb=(k,l,v,c)=>'<button class="btn sm '+c+'" data-act="net-br" data-v="'+k+'">'+l+': '+v+'</button>';sa.style.display='flex';sa.style.flexDirection='column';sa.style.gap='calc(var(--u)*.8)';sa.innerHTML=bb('n','PESERTA',brCfg.n,'gold')+bb('z','ZONA',BR_ZONE[brCfg.z].n,'red')+bb('d','SUPPLY DROP',BR_DROP[brCfg.d].n,'purple')+bb('t','KETAHANAN',BR_TUF[brCfg.t].n,'green')}}}}
 {const _raNm=refreshArena;refreshArena=function(){_raNm();if(NET.role&&NET.conn&&!trainPick&&NET.hcMode>0){$('arenaVs').textContent=NET_HC_NAMES[NET.hcMode]+': '+CHARS[selId].name+' + '+CHARS[foeSelId].name+(NET.hcMode===3?' + CPU':' (TIM) VS CPU')}}}
 function init(){
   buildLayers();buildP2Controls();buildIcons();buildCostumeUI();buildSettingsUI();buildComboList();bindControls();bindControls2();bindEvents();
