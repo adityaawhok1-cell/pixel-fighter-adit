@@ -107,7 +107,8 @@ jobs:
           [ -f res-overrides.zip ] && unzip -oq res-overrides.zip -d $A/res || true
           # 5) versionCode naik otomatis
           sed -i -E "s/versionCode [0-9]+/versionCode $((100 + GITHUB_RUN_NUMBER))/" android/app/build.gradle
-
+      - name: Pasang plugin Net
+        run: python3 inject_net.py .
       - name: Build
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
 
