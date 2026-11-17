@@ -3302,7 +3302,7 @@ function simHash(){
     h=hmix(h,f.face);h=hmix(h,f.comboHits);h=hmix(h,f.attack?f.attack.t:-1);h=hmix(h,f.onG?1:0);h=hmix(h,f.wT);h=hmix(h,f.ammo);h=hmix(h,f.boost);h=hmix(h,f.dbT||0);h=hmix(h,f.frT||0);
     h=hstr(h,f.state);h=hstr(h,f.weapon||'');
   }
-  if(g.hc)for(const f of g.hc.fs.slice(2)){h=hmix(h,f.x);h=hmix(h,f.y);h=hmix(h,f.hp);h=hmix(h,f.vx)}h=hmix(h,g.timer);h=hmix(h,g.time);h=hmix(h,g.round);h=hmix(h,g.score[0]);h=hmix(h,g.score[1]);h=hmix(h,g.proj.length);h=hmix(h,g.items.length);
+  if(g.hc)for(const f of g.hc.fs.filter(q=>q!==g.p&&q!==g.e)){h=hmix(h,f.x);h=hmix(h,f.y);h=hmix(h,f.hp);h=hmix(h,f.vx)}h=hmix(h,g.timer);h=hmix(h,g.time);h=hmix(h,g.round);h=hmix(h,g.score[0]);h=hmix(h,g.score[1]);h=hmix(h,g.proj.length);h=hmix(h,g.items.length);
   h=hmix(h,g.itemT);h=hmix(h,RNG_STATE);h=hstr(h,g.phase);
   return h>>>0;
 }
@@ -6912,8 +6912,8 @@ function drawWorld(g,c){
     else if(it.type==='disc')drawDiscItem(c,it,ix,iy);else c.drawImage(ICONS[it.type],ix-7,iy);
     const a=it.t*3;for(let k=0;k<3;k++){const sx=ix+Math.round(Math.cos(a+k*2.1)*10),sy=iy+7+Math.round(Math.sin(a+k*2.1)*9);if(Math.floor(it.t*8+k)%2===0){c.fillStyle='#fff';c.fillRect(sx-1,sy,3,1);c.fillRect(sx,sy-1,1,3)}}
   }
-  epiDrawZones(c,g);for(const f of [g.p,g.e,g.p.clone,g.e.clone,g.p.clone2,g.e.clone2].concat(g.hc?g.hc.fs.slice(2):[]))if(f&&!f.out&&!(G.posMode&&f.team!==0))drawShadow(c,f.x,f.y,groundBelow(f.x,f.y));
-  drawVictoryFx(c,g,0);if(g.bld)bldDraw(c,g);if(g.hc&&g.hc.ent)twDraw(c,g);g.p.draw(c);g.e.draw(c);if(g.hc)for(const f of g.hc.fs.slice(2))f.draw(c);if(g.hc&&g.hc.tw)twFg(c,g);drawSci(c,g);ninDraw(c,g);for(const m of g.movers)drawMopper(c,m);drawWebs(c,g);drawVictoryFx(c,g,1);mapV1DrawBarrels(c,g,true);
+  epiDrawZones(c,g);for(const f of [g.p,g.e,g.p.clone,g.e.clone,g.p.clone2,g.e.clone2].concat(g.hc?g.hc.fs.filter(q=>q!==g.p&&q!==g.e):[]))if(f&&!f.out&&!(G.posMode&&f.team!==0))drawShadow(c,f.x,f.y,groundBelow(f.x,f.y));
+  drawVictoryFx(c,g,0);if(g.bld)bldDraw(c,g);if(g.hc&&g.hc.ent)twDraw(c,g);g.p.draw(c);g.e.draw(c);if(g.hc)for(const f of g.hc.fs.filter(q=>q!==g.p&&q!==g.e))f.draw(c);if(g.hc&&g.hc.tw)twFg(c,g);drawSci(c,g);ninDraw(c,g);for(const m of g.movers)drawMopper(c,m);drawWebs(c,g);drawVictoryFx(c,g,1);mapV1DrawBarrels(c,g,true);
   drawRoFront(c,g);
   for(const pr of g.proj){const x=Math.round(pr.x),y=Math.round(pr.y);if(pr.ball){drawBall(c,pr,x,y);continue}if(pr.sack){drawSack(c,pr,x,y);continue}if(pr.scis){drawScissors(c,pr,x,y);continue}if(pr.hth){drawHerth(c,pr,x,y);continue}if(pr.kr){drawKrio(c,pr,x,y);continue}if(pr.bz){drawBara(c,pr,x,y);continue}if(pr.gv){drawGravi(c,pr,x,y);continue}if(pr.bayu){drawBayu(c,pr,x,y);continue}if(pr.epi>=5){drawRoket(c,pr,x,y);continue}if(pr.epi>=3){drawRainy(c,pr,x,y);continue}if(pr.epi===2){drawEpiUlt(c,pr,x,y);continue}if(pr.epi){drawEpiShot(c,pr,x,y);continue}if(pr.web){drawWebShot(c,pr,x,y);continue}if(pr.wave){drawWave(c,pr,x,y);continue}drawTracer(c,pr,x,y)}
   drawOrs(c,g);drawParts(c);drawS7(c,g);
@@ -9103,7 +9103,7 @@ const IPM=new Map(),IPC={},IPR=[],IP_CAM=['cam','cam1','cam2','cy1','cy2','cyM']
 function ipSnap(){/* dipanggil tepat sebelum tiap langkah update: simpan posisi 'sebelumnya' */
   const g=G;IPM.clear();if(!g)return;
   const L=[g.p,g.e,g.p&&g.p.clone,g.e&&g.e.clone,g.p&&g.p.clone2,g.e&&g.e.clone2];
-  if(g.hc)for(const f of g.hc.fs.slice(2))L.push(f);
+  if(g.hc)for(const f of g.hc.fs.filter(q=>q!==g.p&&q!==g.e))L.push(f);
   if(g.proj)for(const q of g.proj)L.push(q);
   if(g.movers)for(const q of g.movers)L.push(q);
   for(const o of L)if(o&&typeof o.x==='number'&&typeof o.y==='number')IPM.set(o,[o.x,o.y]);
@@ -9171,13 +9171,13 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 /* ===== AUTO BATTLE 2V2: toko hero + upgrade, ronde berjalan otomatis (8 ronde, 3 nyawa) ===== */
-const AUTO_MAX_ROUND=8,AUTO_LIVES=3,AUTO_COST_HERO=8,AUTO_COST_UP=5,AUTO_TEAM_MAX=1;
+const AUTO_MAX_ROUND=8,AUTO_LIVES=3,AUTO_COST_HERO=8,AUTO_COST_UP=5,AUTO_TEAM_MAX=3;
 let autoShopEl=null;
 /* upgrade HP disimpan di salinan data karakter (ikut bertahan saat reset() tiap ronde) */
 function autoUpgradeCh(g,f){
-  const st=g.autoShop;if(!st||f.team!==0)return;const k=st.up+'_'+(f.star||1);if(f.upKey===k)return;
+  const st=g.autoShop;if(!st||f.team!==0)return;const k=(f.lv|0)+'_'+(f.star||1);if(f.upKey===k)return;
   const base=f.chBase||(f.chBase=f.ch),sm=1+.4*((f.star||1)-1);
-  f.ch=Object.assign(Object.create(Object.getPrototypeOf(base)),base,{hp:Math.round((base.hp+35*st.up)*sm)});f.upKey=k;
+  f.ch=Object.assign(Object.create(Object.getPrototypeOf(base)),base,{hp:Math.round((base.hp+35*(f.lv|0))*sm)});f.upKey=k;
 }
 /* stat tim sendiri: nilai absolut, aman dipanggil berulang. Dipanggil SETELAH hcPlace karena hcPlace menimpa spd/pow/dm/bd/bo dengan nilai lawan */
 /* ===== STRATEGI: kelas hero, sinergi kelas, 3 jalur upgrade, taktik ronde, kunci toko ===== */
@@ -9216,12 +9216,12 @@ function autoAllyStats(g){
   const n=g.hc.fs.filter(f=>f.team===0).length,sy=1;/* sinergi ukuran tim */
   const c=autoSynCount(g.hc.fs),kb=1,lb=1,pb=1,mix=1;/* sinergi dihapus *//* sinergi kelas */
   const tc=[{p:1.15,d:1.12},{p:1,d:1},{p:.92,d:.82}][st.tac===undefined?1:st.tac];
-  for(const f of g.hc.fs){if(f.team!==0)continue;f.bu=20;if(g.phase!=='fight')f.ult=Math.max(f.ult||0,30);/* ULTI lebih cepat penuh: 20 per pukulan (normal 9), awal ronde 30 */f.spd=lb*(1+.05*(st.sp||0));f.pow=(1+.25*((f.star||1)-1))*sy*pb*mix*(1+.12*(st.at||0))*tc.p;f.dm=1;f.bd=Math.pow(.92,st.up)*kb*tc.d;f.bo=Math.pow(1.1,st.up)}
+  for(const f of g.hc.fs){if(f.team!==0)continue;f.bu=20;if(g.phase!=='fight')f.ult=Math.max(f.ult||0,30);/* ULTI lebih cepat penuh: 20 per pukulan (normal 9), awal ronde 30 */f.spd=lb*(1+.05*(f.lv|0));f.pow=(1+.25*((f.star||1)-1))*sy*pb*mix*(1+.12*(f.lv|0))*tc.p;f.dm=1;f.bd=Math.pow(.92,f.lv|0)*kb*tc.d;f.bo=Math.pow(1.1,f.lv|0)}
 }
 /* musuh makin kuat tiap ronde. HANYA dipanggil tepat setelah hcPlace (pow dihitung dari nilai dasar yang baru disalin) */
 function autoFoeStats(g){
   const st=g.autoShop;if(!st)return;const r=st.round-1;
-  for(const f of g.hc.fs){if(f.team===0)continue;f.pow=(f.pow||1)*(1+.1*r);f.bd=1/(1+.1*r);f.bu=14;if(g.phase!=='fight')f.ult=Math.max(f.ult||0,20)}
+  const tn=Math.max(1,g.hc.fs.filter(q=>q.team===0).length)-1;for(const f of g.hc.fs){if(f.team===0)continue;f.pow=(f.pow||1)*(1+.1*r)*(1+.15*tn);f.bd=1/((1+.1*r)*(1+.5*tn));f.bu=14;if(g.phase!=='fight')f.ult=Math.max(f.ult||0,20)}
 }
 const autoCost=id=>clamp(Math.round(CHARS[id].hp/12),5,14),AUTO_REROLL=2;
 const AUTO_ITEM_CHANCE=.12,AUTO_ITEM_ADD=5,AUTO_INV_MAX=4;
@@ -9636,7 +9636,8 @@ const _nrHc=newRound;newRound=function(){_nrHc();const g=G;if(g&&g.hc){hcPlace(g
 const _nrAuto=newRound;newRound=function(){const g=G,au=g&&g.autoShop&&!g.autoMp;if(au)for(const f of g.hc.fs){autoUpgradeCh(g,f);f.dt=null}_nrAuto();if(au){autoAllyStats(g);autoFoeStats(g)}};
 /* AUTO BATTLE 2V2: tanpa batas waktu ronde bisa macet selamanya; setelah 70 detik tim dengan sisa HP lebih besar menang */
 const _hccAuto=hcCheck;hcCheck=function(g){
-  if(g.autoShop&&g.phase==='fight'&&!g.hcGo){if(g.autoMp)autoMpItemTick(g);else autoItemTick(g)}
+  if(g.autoShop&&!g.autoMp&&g.phase==='fight'&&!g.hcGo&&!g.pigStage&&g.p.hp<=0){const fo=g.hc.fs.find(f=>f.team!==0&&f.hp>0)||g.e;g.hcGo=1;g.hcWin=false;endRound(fo,g.p,'ko');g.score=[0,1];return}/* hero utama gugur = ronde kalah */
+  if(g.autoShop&&g.phase==='fight'&&!g.hcGo){if(g.autoMp)autoMpItemTick(g);else autoItemTick(g);autoHidTick(g)}
   if(g.autoShop&&g.phase==='fight'&&!g.hcGo&&g.fT>70){
     const fs=g.hc.fs,m=fs.filter(f=>f.team===0&&f.hp>0),o=fs.filter(f=>f.team!==0&&f.hp>0),sum=a=>a.reduce((t,f)=>t+f.hp/hpMax(f),0),sm=sum(m),so=sum(o),win=(g.autoMp&&Math.abs(sm-so)<1e-9)?grand()<.5:sm>so;/* MP: seri -> undian deterministik lewat grand() */
     g.hcGo=1;g.hcWin=win;endRound(win?(m[0]||g.p):(o[0]||g.e),win?(fs.find(f=>f.team!==0)||g.e):(m[0]||g.p),'time');g.score=[win?1:0,win?0:1];return;
@@ -9837,7 +9838,7 @@ const _dhHc=drawHUD;drawHUD=function(c,g,mode){
   else{txt(c,hcLabel(g.hc),VW/2,105,3,'#ffd040','c','#14101e');txt(c,'GET READY!',VW/2,145,2,'#ffffff','c','#14101e')}
   if(g.phase==='intro'||g.phase==='count'||g.phase==='fight'){
     const a=g.hc.fs.filter(f=>f.team===0&&f.hp>0).length,b=g.hc.fs.filter(f=>f.team!==0&&f.hp>0).length;
-    if(g.hc.tw)twHud(c,g);else if(g.hc.k==='2v2'){hcRoster(c,g);if(g.autoMp)autoMpHud(c,g)}else if(g.hc.k!=='giant')txt(c,g.hc.k==='br'?'SISA '+(a+b):'TIM '+a+' - '+b+' LAWAN',VW/2,6,2,'#ffffff','c','#14101e');
+    if(g.hc.tw)twHud(c,g);else if(g.hc.k==='2v2'){if(g.pigStage)autoPigHud(c,g);else{hcRoster(c,g);if(g.autoMp)autoMpHud(c,g)}}else if(g.hc.k!=='giant')txt(c,g.hc.k==='br'?'SISA '+(a+b):'TIM '+a+' - '+b+' LAWAN',VW/2,6,2,'#ffffff','c','#14101e');
     if(g.hc.k==='br'){
       const h=g.hc;
       txt(c,h.brClock<h.brStart?'ZONA MENUTUP DALAM '+Math.ceil(h.brStart-h.brClock)+'s':'ZONA '+Math.ceil((h.brRight-h.brLeft)/2)+'px',VW/2,18,1,'#ffb0a0','c','#14101e');
@@ -10280,9 +10281,9 @@ function autoLineup(g){
   if(e.w0)e.w=e.w0;e.w0=e.w;e.big=0;
   const setCh=(ch,co)=>{e.ch=ch;e.co=co;e.w=ch.fat?24:ch.custom?[16,17,19][ch.bt|0]:ch.build?18:16;e.w0=e.w;e.reset(boss?Math.round(W*.72):clamp(e.x,24,W-24),-1);e.out=false;e.dropDone=false};
   if(boss){
-    const base=CHARS.waluyo;setCh(Object.assign({},base,{name:'BOS WALUYO',hp:Math.round(base.hp*AUTO_BOSS.hpMul)}),COS.waluyo);
+    const lv2=(st.level|0)>=2,base=lv2?CHARS.spiderman:CHARS.waluyo;setCh(Object.assign({},base,{name:lv2?'BOS WEBOY':'BOS WALUYO',hp:Math.round(base.hp*AUTO_BOSS.hpMul)}),lv2?COS.spiderman:COS.waluyo);
     e.big=AUTO_BOSS.big;e.w=Math.round(e.w0*e.big);e.y=FLOOR;e.onG=true;e.plat=null;e.pow=AUTO_BOSS.pow;e.bd=AUTO_BOSS.bd;e.bu=14;e.ult=40;
-    toast('RONDE FINAL! BOS WALUYO RAKSASA!');floatText(e.x,FLOOR-110,'BOS WALUYO','#ff5a48');
+    toast(lv2?'LEVEL 2 FINAL! BOS WEBOY RAKSASA!':'RONDE FINAL! BOS WALUYO RAKSASA!');floatText(e.x,FLOOR-110,lv2?'BOS WEBOY':'BOS WALUYO','#ff5a48');
   }else{
     const lead=al[0],pool=HC_CH.filter(x=>CHARS[x]&&x!==lead.ch.id),id=pool[grint(0,pool.length-1)];
     setCh(CHARS[id],COS[id]);e.pow=1+.1*r;e.bd=1/(1+.1*r);e.bu=14;e.ult=20;
@@ -10365,13 +10366,15 @@ function drawAutoDrops(c,g){
     txt(c,autoItem(d.id).n,ix,iy-9,1,'#ffe070','c','#14101e');
     const a=d.t*3;for(let k=0;k<3;k++){const sx=ix+Math.round(Math.cos(a+k*2.1)*10),sy=iy+7+Math.round(Math.sin(a+k*2.1)*9);if(Math.floor(d.t*8+k)%2===0){c.fillStyle='#fff';c.fillRect(sx-1,sy,3,1);c.fillRect(sx,sy-1,1,3)}}}}
 {const _fdD=Fighter.prototype.draw;Fighter.prototype.draw=function(c){
+  if(this.pig){autoPigDraw(c,this);return}
   const g=G;if(g&&g.posMode&&this.team!==0)return;if(g&&g.autoShop&&g.autoDrops&&g.autoDrops.length&&this===g.p)drawAutoDrops(c,g);
+  if(g&&g.hid&&this===g.p)autoHidDraw(c,g);
   return _fdD.apply(this,arguments)}}
 /* deteksi musuh kalah + gerakkan drop (saat bertarung & saat animasi KO supaya loot sempat melayang ke hero) */
 {const _upD=update;update=function(dt){_upD(dt);
   const g=G;if(!g||!g.autoShop||!g.hc||g.hc.k!=='2v2')return;
   if(!g.autoMp&&(g.phase==='fight'||g.phase==='ko')){
-    for(const f of g.hc.fs)if(f.team!==0&&f.hp<=0&&!f.dropDone){f.dropDone=true;autoSpawnDrop(g,f)}
+    for(const f of g.hc.fs)if(f.team!==0&&!f.pig&&f.hp<=0&&!f.dropDone){f.dropDone=true;autoSpawnDrop(g,f)}
     autoDropStep(g,Math.min(dt,.05))}}}
 /* menang ronde: drop yang belum terambil otomatis masuk TAS (penuh = jadi koin) */
 {const _anD=autoNext;autoNext=function(){
@@ -10533,7 +10536,7 @@ function autoShopCss(){
 `;document.head.appendChild(s2)}
 function autoShopNew(){
   if(!G||!G.autoShop)return;
-  if(G.autoMp)return autoMpShop();
+  return G.autoMp?autoMpShop():autoSpShop();
   if(!autoShopEl){autoShopEl=document.createElement('div');autoShopEl.id='autoShop';
     autoShopEl.style.cssText='position:fixed;z-index:99999;inset:2%;display:flex;align-items:stretch;justify-content:center;color:white;font-family:inherit;pointer-events:auto';document.body.appendChild(autoShopEl)}
   autoShopEl.style.display='flex';document.body.classList.add('auto2v2');autoShopCss();
@@ -10546,7 +10549,7 @@ function autoShopNew(){
   const slotBtn=(f,idx)=>'<button class="as-slot'+(f.eq?' fill':'')+(pk?' pk':'')+'" data-slot="'+idx+'">'+(pk?'⤓ PASANG':f.eq?autoIco(f.eq)+' '+autoItem(f.eq).n:'+ ITEM')+'</button>';
   const ultSlot=()=>st.ultId&&CHARS[st.ultId]?'<div class="as-ult on">'+autoPorImg(st.ultId,'as-mini')+'<span>ITEM ULTI<br><b>'+autoUltInfo(st.ultId).n+'</b> <em class="as-rar '+autoUltInfo(st.ultId).r+'">'+autoUltInfo(st.ultId).r+'</em><br><small>sekali pakai</small></span><button class="as-x" data-ultx="1">✕</button></div>':'<div class="as-ult"><span>ULTI BAWAAN<br><small>'+autoUltInfo(main.ch.id).n+'</small></span></div>';
   const heroCard=(f,idx)=>{const isM=f===main;
-    return '<div class="as-hero'+(isM?' main':'')+'"><div class="as-hp">'+autoPorImg(f.ch.id)+(isM?'<em>UTAMA</em>':'')+'</div><div class="as-hi"><div class="as-hn"><b>'+f.ch.name+'</b><span>'+'★'.repeat(f.star||1)+'</span></div><div class="as-hs">HP '+Math.ceil(f.ch.hp)+(isM?' · gugur = ronde kalah':' · pendamping')+'</div><div class="as-hbar"><i></i></div><div class="as-sl">'+slotBtn(f,idx)+(isM?ultSlot():'')+'</div></div>'
+    return '<div class="as-hero'+(isM?' main':'')+'"><div class="as-hp">'+autoPorImg(f.ch.id)+(isM?'<em>UTAMA</em>':'')+'</div><div class="as-hi"><div class="as-hn"><b>'+f.ch.name+'</b><span>'+'★'.repeat(f.star||1)+'</span></div><div class="as-hs">HP '+Math.ceil(f.ch.hp)+(isM?' · gugur = ronde kalah':' · pendamping')+'</div><div class="as-hbar"><i></i></div><div class="as-sl">'+slotBtn(f,idx)+(isM?ultSlot():'')+'</div>'+(isM?autoSpUpBtn(st):'')+'</div>'
      +(isM?'':'<button class="as-sell" data-sell="'+idx+'">JUAL<br>+'+val(f)+'</button>')+'</div>'};
   const empty='';
   const stage='<div class="as-stage'+(boss?' bs':'')+'"><div class="as-sg"><b>STAGE '+r+'</b><span>/ '+AUTO_MAX_ROUND+'</span><em class="as-lv">'+(boss?'👑 BOS':'MUSUH Lv.'+r)+'</em></div><div class="as-bar"><i style="width:'+Math.round(r/AUTO_MAX_ROUND*100)+'%"></i></div>'
@@ -10569,7 +10572,7 @@ function autoShopNew(){
    +'<div class="as-r"><div class="as-sec"><span>TOKO ITEM · ketuk kartu untuk beli</span></div><div class="as-of">'+offers+'</div>'
    +'<div class="as-sec"><span>TAS ITEM ('+inv.length+'/'+AUTO_INV_MAX+')</span><span style="font-weight:normal;opacity:.8">'+(pk?autoItem(pk).d+' · ketuk slot ITEM hero':'ketuk item, lalu slot ITEM hero · 👥 PANGGIL: ketuk = langsung terpasang')+'</span></div><div class="as-bag">'+bag+'</div>'
    +'<div class="as-row" style="margin-top:auto"><button data-reroll="1" style="'+(st.gold>=AUTO_REROLL?'background:#1d7f7f;border-color:#80ffff':'opacity:.55')+'">ACAK · '+AUTO_REROLL+'</button><button data-lock="1" style="'+(st.lock?'background:#d6a31a;border-color:#fff0a6;color:#2b1700':'')+'">'+(st.lock?'TERKUNCI':'KUNCI TOKO')+'</button></div>'
-   +'<div class="as-sec"><span>UPGRADE HERO</span></div><div class="as-up">'+autoUpBtns(st)+'</div></div></div>'
+   +'</div></div>'
    +'<div class="as-ft"><button data-automenu="1" style="background:#7a1f1f;border-color:#ff9a9a">MENU</button><button data-autopos="1" style="background:#1d6f9f;border-color:#8ad8ff">📍 ATUR POSISI</button><button data-autofight="1" class="as-go">▶ MULAI RONDE '+r+'</button></div>'+pop+'</div>';
   const q=(sel,fn)=>autoShopEl.querySelectorAll(sel).forEach(fn);
   q('[data-help]',b=>b.onclick=()=>{st.help=!st.help;autoShopShow()});
@@ -10597,6 +10600,7 @@ function autoShopNew(){
   q('[data-reroll]',b=>b.onclick=()=>{if(st.gold<AUTO_REROLL)return toast('KOIN TIDAK CUKUP');st.gold-=AUTO_REROLL;autoRoll(g);autoShopShow()});
   q('[data-lock]',b=>b.onclick=()=>{st.lock=!st.lock;autoShopShow()});
   q('[data-up]',b=>b.onclick=()=>{const k=b.dataset.up,lv=st[k]||0,c=autoUpCost(st,k);if(lv>=AUTO_UP_MAX)return toast('SUDAH MAKS');if(st.gold<c)return toast('KOIN TIDAK CUKUP');st.gold-=c;st[k]=lv+1;if(k==='up')for(const f of h.fs)if(f.team===0){autoUpgradeCh(g,f);f.hp=f.trail=f.ch.hp}autoAllyStats(g);autoShopShow()});
+  q('[data-upall]',b=>b.onclick=()=>{const lv=st.up|0,c=autoSpUpCost(st);if(lv>=AUTO_UP_MAX)return toast('SUDAH MAKS');if(st.gold<c)return toast('KOIN TIDAK CUKUP');st.gold-=c;st.up=st.at=st.sp=lv+1;for(const f of h.fs)if(f.team===0){autoUpgradeCh(g,f);f.hp=f.trail=f.ch.hp}autoAllyStats(g);autoShopShow()});
   q('[data-autopos]',b=>b.onclick=()=>autoPosStart());
   q('[data-autofight]',b=>b.onclick=()=>{autoShopEl.style.display='none';for(const f of g.hc.fs){f.isP=false;f.ai=f.ai||newAI();f.ctl={l:0,r:0,u:0,d:0}}g.phase='count';g.cT=0;g.cN=-1;st.started=true});
   q('[data-automenu]',b=>b.onclick=()=>{autoShopEl.style.display='none';modeOff();G=null;returnTo='menu';go('menu')});
@@ -10656,12 +10660,12 @@ function autoGachaShow(g){
   autoShopCss();let el=document.getElementById('autoGacha');
   if(!el){el=document.createElement('div');el.id='autoGacha';el.style.cssText='position:fixed;z-index:100000;inset:2%;display:flex;align-items:stretch;justify-content:center;color:#fff;font-family:inherit;pointer-events:auto';document.body.appendChild(el)}
   el.style.display='flex';document.body.classList.add('auto2v2');
-  const me=(g.autoMp&&g.autoShop.heroId)||g.p.ch.id,ids=HC_CH.filter(x=>CHARS[x]),W=AUTO_GACHA_W;
+  let me=(g.autoMp&&g.autoShop.heroId)||g.p.ch.id;const ids=HC_CH.filter(x=>CHARS[x]),W=AUTO_GACHA_W;
   const render=(id,sv)=>{const I=id?autoUltInfo(id):null;
     el.innerHTML='<div class="as-pn ag"><div class="as-hd"><div class="as-ttl">GACHA HERO UTAMA</div></div><div class="ag-body"><div class="ag-card'+(sv===2?' rv '+I.r:'')+'">'+(id?autoPorImg(id,'as-gp'):'<div class="as-gp as-ph">?</div>')+'</div><div class="ag-info">'
      +(sv===2?'<span class="as-rar '+I.r+'">'+I.r+'</span><h2>'+CHARS[id].name+'</h2><div>HP '+Math.ceil(CHARS[id].hp)+'</div><div class="as-ud">ULTI BAWAAN: <b>'+I.n+'</b><br>'+I.d+'</div>':sv===1?'<h2>MEMUTAR...</h2>':'<h2>Siapa hero utamamu?</h2><div class="as-ud">Peluang: R '+W.R+'% · SR '+W.SR+'% · SSR '+W.SSR+'%<br>Rarity hero = rarity ulti bawaannya</div>')
-     +'</div></div><div class="as-ft">'+(sv===0?'<button class="as-go" data-g="roll">🎰 PUTAR GACHA</button>':sv===2?'<button class="as-go" data-g="go">▶ LANJUT KE TOKO</button>':'<button class="as-go" disabled>...</button>')+'</div></div>';
-    const b=el.querySelector('[data-g]');if(b)b.onclick=()=>{if(b.dataset.g==='roll')roll();else{el.style.display='none';if(g.autoShop)g.autoShop.gDone=true;autoShopShow()}}};
+     +'</div></div><div class="as-ft">'+(sv===0?'<button class="as-go" data-g="roll">🎰 PUTAR GACHA</button>':sv===2?(true?'<button class="as-go" data-g="again" style="background:#1d7f7f;border-color:#80ffff">🎰 GACHA ULANG · '+AUTO_REGACHA+' KOIN (punya '+g.autoShop.gold+')</button>':'')+'<button class="as-go" data-g="go">▶ LANJUT KE TOKO</button>':'<button class="as-go" disabled>...</button>')+'</div></div>';
+    el.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const k=b.dataset.g;if(k==='roll')roll();else if(k==='again'){const n=g.autoMp?autoMpRegacha(g):autoSpRegacha(g);if(!n)toast('KOIN TIDAK CUKUP (GACHA ULANG '+AUTO_REGACHA+')');else{me=n;roll()}}else{el.style.display='none';if(g.autoShop)g.autoShop.gDone=true;autoShopShow()}})};
   const roll=()=>{let n=0,dl=60;const step=()=>{n++;if(n<16){render(ids[Math.floor(Math.random()*ids.length)],1);sfx('click');dl+=n*2;setTimeout(step,dl)}else{render(me,2);sfx('item')}};step()};
   render(null,0)}
 {const _g3=go;go=function(sc){if(sc!=='play'){const e=document.getElementById('autoGacha');if(e)e.style.display='none'}return _g3.apply(this,arguments)}}
@@ -10741,12 +10745,12 @@ function autoSummonKP(g,e,n){
   const fs=g.hc.fs,W=isBox()?BOX_W:WORLD_W,tgt=fs.find(f=>f.team===0&&f.hp>0)||g.p;
   n=Math.min(n,BOSS_MON.maxKP-fs.filter(f=>f.kp&&f.hp>0).length);
   g.shake=Math.max(g.shake,12);g.hitStop=Math.max(g.hitStop||0,.1);
-  floatText(e.x,e.y-170,'KANG PEL BANGKIT!','#ff3a2a');G.pop={text:'PASUKAN KANG PEL!',t:0,col:'#ff3a2a',who:e};try{sfx('ultimate')}catch(_){}
+  const lv2=!!(g.autoShop&&(g.autoShop.level|0)>=2);floatText(e.x,e.y-170,lv2?'ANAK JARING MUNCUL!':'KANG PEL BANGKIT!','#ff3a2a');G.pop={text:lv2?'PASUKAN ANAK JARING!':'PASUKAN KANG PEL!',t:0,col:'#ff3a2a',who:e};try{sfx('ultimate')}catch(_){}
   const co=Object.assign({},COS.waluyo,{shirt:'#23233a',shorts:'#701010',gloves:'#9aa0a8',skin:'#8a6a58'});
   for(let i=0;i<n;i++){
     const side=i%2?1:-1,sx=clamp(Math.round(tgt.x+side*(70+i*38+grand()*30)),24,W-24),s=autoSnap2(sx,FLOOR);
-    const ch=Object.assign({},CHARS.waluyo,{name:'KANG PEL',hp:BOSS_MON.kpHp}),f=new Fighter(ch,false);
-    f.team=1;f.co=co;f.isP=false;f.ai=newAI();f.ctl={l:0,r:0,u:0,d:0};
+    const ch=Object.assign({},lv2?CHARS.spiderman:CHARS.waluyo,{name:lv2?'ANAK JARING':'KANG PEL',hp:BOSS_MON.kpHp}),f=new Fighter(ch,false);
+    f.team=1;f.co=lv2?mirrorCos(COS.spiderman):co;f.isP=false;f.ai=newAI();f.ctl={l:0,r:0,u:0,d:0};
     f.reset(s.x,s.x<tgt.x?1:-1);f.y=s.y;f.onG=true;f.plat=null;
     f.spd=1.08;f.pow=.75;f.dm=1;f.bd=1.35;f.bu=8;f.ult=100;/* ulti penuh: sapuan KANG PEL LEWAT */
     f.kp=true;f.kpT=BOSS_MON.kpLife;f.dropDone=true;f.out=false;
@@ -10898,6 +10902,9 @@ function autoSummonAlly(g,hid,owner){
      Ronde dimulai di FRAME YANG SAMA di kedua HP (saat bit RDY kedua pemain sudah terbaca) -> autoMpBegin().
    - Seluruh acak DI DALAM ronde memakai grand() (RNG gameplay ter-seed); acak toko/gacha (Math.random) hanya di luar ronde dan lokal.
    ===================================================================== */
+const autoMpUpCost=x=>9+3*(x.lv|0);/* satu upgrade menaikkan BAJA+SERANGAN+LAJU sekaligus */
+const AUTO_ROSTER_MAX=4,AUTO_REGACHA=3;/* biaya gacha ulang di awal permainan */
+function autoMpRegacha(g){const st=g.autoShop;if(st.gold<AUTO_REGACHA||g.mpRound>1||st.ready)return null;let n,t=0;do{n=autoMpGachaPick()}while(n===st.heroId&&++t<30);st.gold-=AUTO_REGACHA;st.heroId=n;st.roster=[{id:n,lv:0,up:0,at:0,sp:0}];st.act=0;st.offers=null;return n}
 function autoMpSide(){return NET.role==='client'?1:0}
 function autoMpPool(){return HC_CH.filter(x=>CHARS[x]&&(!CHARS[x].custom||x==='copy'))}/* hanya hero bawaan: ada di kedua HP */
 function autoMpGachaPick(){
@@ -10914,6 +10921,7 @@ function autoMpRoll(st){/* toko pribadi: 5 item biasa (min. 1 senjata), 20% satu
   const pool=AUTO_ITEMS.filter(x=>x.id.indexOf('sm_')!==0),o=shuf(pool.slice()).slice(0,5).map(x=>'n:'+x.id);
   if(!o.some(x=>AUTO_WPN[x.slice(2)])){const ids=Object.keys(AUTO_WPN);o[Math.floor(Math.random()*o.length)]='n:'+ids[Math.floor(Math.random()*ids.length)]}
   if(Math.random()<AUTO_SCROLL_CHANCE){const h=autoMpScrollPick(st);if(h)o[Math.floor(Math.random()*o.length)]='u:'+h}
+  if(st.roster&&st.roster.length<AUTO_ROSTER_MAX&&Math.random()<.45){const ex=st.roster.map(x=>x.id),c=autoMpPool().filter(x=>x!=='copy'&&ex.indexOf(x)<0);if(c.length)o[Math.floor(Math.random()*o.length)]='h:'+c[Math.floor(Math.random()*c.length)]}
   st.offers=o}
 function autoMpBuild(g,cfg){/* dipanggil netHcBuild di KEDUA HP tepat setelah startMatchCore */
   const fs=[g.p,g.e];g.p.team=0;g.e.team=1;
@@ -10922,7 +10930,8 @@ function autoMpBuild(g,cfg){/* dipanggil netHcBuild di KEDUA HP tepat setelah st
   g.autoMp=true;g.mpLives=[AUTO_LIVES,AUTO_LIVES];g.mpWins=[0,0];g.mpRound=1;g.round=1;g.mpRdy=[0,0];g.mpB=[null,null];g.mpWait=false;g.mpOver=false;g.mpApplied=false;
   for(const f of fs){f.isP=false;f.ai=newAI();f.ctl={l:0,r:0,u:0,d:0};f.fm=0}
   const pool=autoMpPool();
-  g.autoShop={gold:12,round:1,lives:AUTO_LIVES,up:0,at:0,sp:0,tac:1,inv:[],eq:null,ultId:null,heroId:pool.length?autoMpGachaPick():g.p.ch.id,offers:null,streak:0,lb:'',ready:false,gDone:false};
+  const h0=pool.length?autoMpGachaPick():g.p.ch.id;
+  g.autoShop={gold:12,round:1,lives:AUTO_LIVES,roster:[{id:h0,lv:0,up:0,at:0,sp:0}],act:0,sel:-1,tac:1,inv:[],eq:null,ultId:null,heroId:h0,offers:null,streak:0,lb:'',ready:false,gDone:false};
   newRound();g.phase='shop';
   toast('AUTO BATTLE 1V1 · DUEL ANTAR PEMAIN');
   autoGachaShow(g)}
@@ -10939,6 +10948,7 @@ function autoMpStats(g,B){
     f.ult=30;f.eq=b.eq||null;
     if(b.ult&&CHARS[b.ult]){f.bUlt=b.ult;f.ult=Math.max(f.ult,40);floatText(f.x,f.y-52,'ULTI: '+CHARS[b.ult].name,'#ff7aff')}})}
 function autoMpBegin(g,again){
+  if(g.pigStage)autoPigAbort(g);
   let B=g.mpB;
   if(!again){
     const me=autoMpSide(),a=NET.mpMine&&NET.mpMine[g.mpRound],b=NET.mpPeer&&NET.mpPeer[g.mpRound];
@@ -10985,7 +10995,7 @@ function autoMpResend(now){/* kirim ulang build selama menunggu lawan (pesan bis
   if(!(NET.mpMine&&NET.mpMine[g.mpRound])||(g.phase!=='shop'&&!g.mpWait)||now-(NET.mpSentAt||0)<700)return;autoMpSend(g)}
 function autoMpReady(g){
   const st=g.autoShop;if(st.ready||g.phase!=='shop'||g.mpOver)return;
-  NET.mpMine=NET.mpMine||{};NET.mpMine[g.mpRound]={hero:st.heroId,up:st.up|0,at:st.at|0,sp:st.sp|0,tac:st.tac===undefined?1:st.tac,eq:st.eq||null,ult:st.ultId||null};
+  NET.mpMine=NET.mpMine||{};const A=st.roster[st.act];NET.mpMine[g.mpRound]={hero:A.id,up:A.up|0,at:A.at|0,sp:A.sp|0,tac:st.tac===undefined?1:st.tac,eq:st.eq||null,ult:st.ultId||null};
   st.ready=true;autoMpSend(g);NET.rdy=true;/* urutan transport terjamin: build tiba sebelum frame yang membawa bit RDY */
   autoShopShow()}
 /* ---------- HUD & toko pribadi ---------- */
@@ -10998,13 +11008,15 @@ function autoMpShop(){
   if(!autoShopEl){autoShopEl=document.createElement('div');autoShopEl.id='autoShop';
     autoShopEl.style.cssText='position:fixed;z-index:99999;inset:2%;display:flex;align-items:stretch;justify-content:center;color:white;font-family:inherit;pointer-events:auto';document.body.appendChild(autoShopEl)}
   autoShopEl.style.display='flex';document.body.classList.add('auto2v2');autoShopCss();
-  const st=g.autoShop,me=autoMpSide(),op=1-me,hid=st.heroId,ch=CHARS[hid]||g.p.ch,inv=st.inv=st.inv||[];
+  const st=g.autoShop,me=autoMpSide(),op=1-me,inv=st.inv=st.inv||[],ro=st.roster,A=ro[st.act],hid=st.heroId=A.id,ch=CHARS[hid]||g.p.ch;
   if(!st.offers)autoMpRoll(st);
-  const bonus=Math.min(3,Math.floor(st.gold/10)),r=g.mpRound,hpv=Math.round(ch.hp+35*(st.up|0)),ob=g.mpB&&g.mpB[op],oc=ob&&CHARS[ob.hero];
+  const bonus=Math.min(3,Math.floor(st.gold/10)),r=g.mpRound,hpv=Math.round(ch.hp+35*(A.lv|0)),ob=g.mpB&&g.mpB[op],oc=ob&&CHARS[ob.hero];
   const eqX=st.eq&&autoItem(st.eq)?autoItem(st.eq):null;
   const slotBtn='<button class="as-slot'+(eqX?' fill':'')+'" data-slot="1">'+(eqX?autoIco(eqX.id)+' '+eqX.n:'+ ITEM')+'</button>';
   const ultSlot=st.ultId&&CHARS[st.ultId]?'<div class="as-ult on">'+autoPorImg(st.ultId,'as-mini')+'<span>ITEM ULTI<br><b>'+autoUltInfo(st.ultId).n+'</b> <em class="as-rar '+autoUltInfo(st.ultId).r+'">'+autoUltInfo(st.ultId).r+'</em><br><small>sekali pakai</small></span><button class="as-x" data-ultx="1">✕</button></div>':'<div class="as-ult"><span>ULTI BAWAAN<br><small>'+autoUltInfo(hid).n+'</small></span></div>';
-  const hero='<div class="as-hero main"><div class="as-hp">'+autoPorImg(hid)+'<em>HEROMU</em></div><div class="as-hi"><div class="as-hn"><b>'+ch.name+'</b></div><div class="as-hs">HP '+hpv+' · '+autoTag(ch)+'</div><div class="as-hbar"><i></i></div><div class="as-sl">'+slotBtn+ultSlot+'</div></div></div>';
+  const lvOf=x=>x.lv|0,upBtn=(x,i)=>{const mx=lvOf(x)>=AUTO_UP_MAX,c=autoMpUpCost(x),ok=!mx&&st.gold>=c;return '<button data-hup="'+i+'" title="BAJA + SERANGAN + LAJU naik sekaligus" style="line-height:1.1;padding:.25em .4em;'+autoBb(ok,['#b47a13','#ffe080'])+'">⬆ Lv'+lvOf(x)+(mx?' MAKS':' · '+c+' koin')+'</button>'};
+  let strip='';for(let i=0;i<AUTO_ROSTER_MAX;i++){const x=ro[i];strip+=x?'<div data-hsel="'+i+'" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;align-items:stretch;text-align:center;font-size:.8em;line-height:1.1;padding:.2em;border:2px solid '+(i===st.act?'#ffe066':'#555')+';border-radius:6px;background:'+(i===st.act?'#5a4400':'#222')+'">'+autoPorImg(x.id,'as-mini')+'<span>'+CHARS[x.id].name+(i===st.act?' ★':'')+'</span>'+upBtn(x,i)+(i!==st.act&&ro.length>1?'<button data-hsell="'+i+'" style="font-size:.85em;background:#7a1f1f;border-color:#ff9a9a">JUAL +'+Math.floor(autoCost(x.id)/2)+'</button>':'')+'</div>':'<div class="em" style="flex:1">+ hero<br><small>dari toko</small></div>'}
+  const hero='<div class="as-hero main"><div class="as-hp">'+autoPorImg(hid)+'<em>HERO AKTIF</em></div><div class="as-hi"><div class="as-hn"><b>'+ch.name+'</b></div><div class="as-hs">HP '+hpv+' · '+autoTag(ch)+' · Lv'+lvOf(A)+'/'+AUTO_UP_MAX+'</div><div class="as-hbar"><i></i></div><div class="as-sl">'+slotBtn+ultSlot+'</div></div></div>';
   const opTxt=oc?'Lawan: <b>'+oc.name+'</b> '+autoTag(oc)+' HP '+Math.ceil(oc.hp+35*(ob.up|0))+' · Ulti '+autoUltInfo(ob.hero).n+'<br>Upgrade lawan: BAJA '+(ob.up|0)+' · SERANGAN '+(ob.at|0)+' · LAJU '+(ob.sp|0)+' · taktik '+AUTO_TAC[ob.tac==null?1:ob.tac].n:'Lawan: ??? · terungkap saat ronde 1 dimulai';
   const stage='<div class="as-stage"><div class="as-sg"><b>RONDE '+r+'</b><span>DUEL ANTAR PEMAIN</span></div>'
    +'<div>NYAWA kamu <b>'+'♥'.repeat(g.mpLives[me])+'</b> · lawan <b>'+'♥'.repeat(g.mpLives[op])+'</b></div>'
@@ -11015,26 +11027,29 @@ function autoMpShop(){
     if(!id)return '<div class="as-off sold">TERJUAL</div>';
     if(id.indexOf('u:')===0){const h=id.slice(2);if(!CHARS[h])return '<div class="as-off sold">TERJUAL</div>';const u=autoUltCost(h),I=autoUltInfo(h),ok=st.gold>=u;
       return '<button class="as-off '+I.r+(ok?'':' no')+'" data-buy="'+id+'" title="'+I.d+'">'+autoPorImg(h,'as-op')+'<span class="as-rar '+I.r+'">'+I.r+'</span><b class="un">📜 '+I.n+'</b><small>GULUNGAN ULTI · '+CHARS[h].name+'</small><em>'+u+'</em></button>'}
+    if(id.indexOf('h:')===0){const h=id.slice(2);if(!CHARS[h])return '<div class="as-off sold">TERJUAL</div>';const c=autoCost(h),ok=st.gold>=c&&ro.length<AUTO_ROSTER_MAX;
+      return '<button class="as-off'+(ok?'':' no')+'" data-buy="'+id+'">'+autoPorImg(h,'as-op')+'<b>'+CHARS[h].name+'</b><small>HERO BARU · '+autoTag(CHARS[h])+' · HP '+CHARS[h].hp+'</small><em>'+c+'</em></button>'}
     const x=autoItem(id.replace(/^[ni]:/,''));if(!x)return '<div class="as-off sold">TERJUAL</div>';const c=autoItemCost(x),ok=st.gold>=c;
     return '<button class="as-off'+(ok?'':' no')+'" data-buy="'+id+'" title="'+x.d+'">'+autoIco(x.id)+'<b>'+x.n+'</b><small>'+x.d+'</small><em>'+c+'</em></button>'}).join('');
   let bag='';for(let i=0;i<AUTO_INV_MAX;i++){const id=inv[i],x=id&&autoItem(id);bag+=x?'<button data-bi="'+i+'" title="'+x.d+'" style="background:#6b4a00;border-color:#ffe066">'+autoIco(id)+'<br>'+x.n+'</button>':'<div class="em">kosong</div>'}
   let pop='';
-  if(st.help)pop='<div class="as-pop"><div class="as-pb help"><h2>CARA MAIN (DUEL 1 VS 1)</h2>• Kamu dan temanmu masing-masing punya 1 hero hasil gacha, toko pribadi, dan '+AUTO_LIVES+' nyawa. Tiap ronde kedua hero bertarung OTOMATIS.<br>• Kalah ronde = nyawa -1. Nyawa salah satu pemain habis = duel tamat. Tidak ada bos & tidak ada batas ronde.<br>• Beli item di toko → masuk TAS → ketuk item di TAS untuk memasangnya ke slot ITEM hero (efek 1 ronde; POTION otomatis saat HP rendah). Slot ULTI dari gulungan = sekali pakai.<br>• Upgrade: BAJA = HP +35 &amp; damage diterima -8% · SERANGAN = damage +12% · LAJU = kecepatan +5%. TAKTIK menentukan gaya bertarung.<br>• Setelah siap, tekan SIAP. Ronde dimulai serentak begitu kedua pemain siap. Build lawan terungkap setelah ronde pertama.<br><button data-help="1" class="as-pc" style="margin-top:.6em">TUTUP</button></div></div>';
+  if(st.help)pop='<div class="as-pop"><div class="as-pb help"><h2>CARA MAIN (DUEL 1 VS 1)</h2>• Kamu dan temanmu masing-masing mulai dengan 1 hero gacha, toko pribadi, dan '+AUTO_LIVES+' nyawa. Beli hero baru di toko (maks '+AUTO_ROSTER_MAX+'); hanya hero AKTIF yang bertarung, ganti kapan saja sebelum SIAP. Tiap ronde kedua hero bertarung OTOMATIS.<br>• Kalah ronde = nyawa -1. Nyawa salah satu pemain habis = duel tamat. Tidak ada bos & tidak ada batas ronde.<br>• Beli item di toko → masuk TAS → ketuk item di TAS untuk memasangnya ke slot ITEM hero (efek 1 ronde; POTION otomatis saat HP rendah). Slot ULTI dari gulungan = sekali pakai.<br>• Ketuk kartu hero untuk menjadikannya aktif. Tombol ⬆ di kartu hero = sekali bayar menaikkan BAJA + SERANGAN + LAJU sekaligus (tiap hero punya level sendiri, maks Lv'+AUTO_UP_MAX+'). JUAL hero yang tidak aktif dapat setengah harga. BAJA = HP +35 &amp; damage diterima -8% · SERANGAN = damage +12% · LAJU = kecepatan +5%. TAKTIK menentukan gaya bertarung.<br>• Setelah siap, tekan SIAP. Ronde dimulai serentak begitu kedua pemain siap. Build lawan terungkap setelah ronde pertama.<br><button data-help="1" class="as-pc" style="margin-top:.6em">TUTUP</button></div></div>';
   else if(st.ready)pop='<div class="as-pop"><div class="as-pb"><h2>SIAP!</h2>Menunggu lawan menyelesaikan persiapan...<br><small>Ronde dimulai serentak begitu kedua pemain siap.</small></div></div>';
   autoShopEl.innerHTML='<div class="as-pn"><div class="as-hd"><div class="as-ttl">AUTO BATTLE 1V1</div><div class="as-trk"><span class="as-n cu">'+r+'</span></div><div class="as-chips"><button class="as-q" data-help="1">?</button><span class="as-chip" style="color:#ff7a7a">'+'♥'.repeat(g.mpLives[me])+'</span><span class="as-chip" style="color:#ffd040">🪙 '+st.gold+'</span></div></div>'
-   +'<div class="as-am"><div class="as-l"><div class="as-sec"><span>HERO KAMU</span></div>'+hero+'<div class="as-sec"><span>TAKTIK RONDE</span><span style="font-weight:normal;opacity:.8">'+AUTO_TAC[st.tac===undefined?1:st.tac].d+'</span></div><div class="as-row">'+autoTacBtns(st)+'</div>'+stage+'</div>'
+   +'<div class="as-am"><div class="as-l"><div class="as-sec"><span>HEROMU ('+ro.length+'/'+AUTO_ROSTER_MAX+')</span><span style="font-weight:normal;opacity:.8">ketuk hero = jadikan aktif · ⬆ = upgrade</span></div><div class="as-row">'+strip+'</div>'+hero+'<div class="as-sec"><span>TAKTIK RONDE</span><span style="font-weight:normal;opacity:.8">'+AUTO_TAC[st.tac===undefined?1:st.tac].d+'</span></div><div class="as-row">'+autoTacBtns(st)+'</div>'+stage+'</div>'
    +'<div class="as-r"><div class="as-sec"><span>TOKO ITEM · ketuk kartu untuk beli</span></div><div class="as-of">'+offers+'</div>'
    +'<div class="as-sec"><span>TAS ITEM ('+inv.length+'/'+AUTO_INV_MAX+')</span><span style="font-weight:normal;opacity:.8">ketuk item untuk memasang ke hero</span></div><div class="as-bag">'+bag+'</div>'
    +'<div class="as-row" style="margin-top:auto"><button data-reroll="1" style="'+(st.gold>=AUTO_REROLL?'background:#1d7f7f;border-color:#80ffff':'opacity:.55')+'">ACAK · '+AUTO_REROLL+'</button><button data-lock="1" style="'+(st.lock?'background:#d6a31a;border-color:#fff0a6;color:#2b1700':'')+'">'+(st.lock?'TERKUNCI':'KUNCI TOKO')+'</button></div>'
-   +'<div class="as-sec"><span>UPGRADE HERO</span></div><div class="as-up">'+autoUpBtns(st)+'</div></div></div>'
+   +'</div></div>'
    +'<div class="as-ft"><button data-mpmenu="1" style="background:#7a1f1f;border-color:#ff9a9a">MENU</button>'+(st.ready?'<button class="as-go" disabled>MENUNGGU LAWAN...</button>':'<button data-mpgo="1" class="as-go">▶ SIAP · MULAI RONDE '+r+'</button>')+'</div>'+pop+'</div>';
   const q=(sel,fn)=>autoShopEl.querySelectorAll(sel).forEach(fn);
   q('[data-help]',b=>b.onclick=()=>{st.help=!st.help;autoShopShow()});
-  if(st.ready){q('[data-mpmenu]',b=>b.onclick=()=>pauseGame());return}
+  if(st.ready){q('[data-hsel]',b=>b.onclick=null);q('[data-mpmenu]',b=>b.onclick=()=>pauseGame());return}
   q('[data-buy]',b=>b.onclick=()=>{const id=b.dataset.buy,ix=st.offers.indexOf(id);if(ix<0)return;
     if(id.indexOf('u:')===0){const h=id.slice(2);if(!CHARS[h]||h==='copy'||h===st.heroId)return;const u=autoUltCost(h),I=autoUltInfo(h);
       if(st.gold<u)return toast('KOIN TIDAK CUKUP');
       st.gold-=u;st.ultId=h;st.offers[ix]=null;toast('GULUNGAN '+I.n+' ['+I.r+'] TERPASANG · SEKALI PAKAI');return autoShopShow()}
+    if(id.indexOf('h:')===0){const h=id.slice(2);if(!CHARS[h])return;const c=autoCost(h);if(ro.length>=AUTO_ROSTER_MAX)return toast('ROSTER PENUH · JUAL HERO DULU');if(st.gold<c)return toast('KOIN TIDAK CUKUP');st.gold-=c;ro.push({id:h,lv:0,up:0,at:0,sp:0});st.offers[ix]=null;toast('HERO BARU: '+CHARS[h].name+' · ketuk untuk jadikan aktif');return autoShopShow()}
     const x=autoItem(id.replace(/^[ni]:/,''));if(!x)return;const c=autoItemCost(x);
     if(inv.length>=AUTO_INV_MAX)return toast('TAS ITEM PENUH');if(st.gold<c)return toast('KOIN TIDAK CUKUP');
     st.gold-=c;inv.push(x.id);st.offers[ix]=null;toast('ITEM: '+x.n);autoShopShow()});
@@ -11043,13 +11058,254 @@ function autoMpShop(){
   q('[data-ultx]',b=>b.onclick=()=>{st.ultId=null;toast('ULTI DILEPAS');autoShopShow()});
   q('[data-reroll]',b=>b.onclick=()=>{if(st.gold<AUTO_REROLL)return toast('KOIN TIDAK CUKUP');st.gold-=AUTO_REROLL;autoMpRoll(st);autoShopShow()});
   q('[data-lock]',b=>b.onclick=()=>{st.lock=!st.lock;autoShopShow()});
-  q('[data-up]',b=>b.onclick=()=>{const k=b.dataset.up,lv=st[k]||0,c=autoUpCost(st,k);if(lv>=AUTO_UP_MAX)return toast('SUDAH MAKS');if(st.gold<c)return toast('KOIN TIDAK CUKUP');st.gold-=c;st[k]=lv+1;autoShopShow()});
+  q('[data-hsel]',b=>b.onclick=()=>{const i=+b.dataset.hsel;if(i===st.act||!ro[i])return;st.act=i;st.heroId=ro[i].id;if(st.ultId===st.heroId)st.ultId=null;toast('HERO AKTIF: '+CHARS[st.heroId].name);autoShopShow()});
+  q('[data-hup]',b=>b.onclick=e=>{e.stopPropagation();const T=ro[+b.dataset.hup];if(!T)return;const c=autoMpUpCost(T);if((T.lv|0)>=AUTO_UP_MAX)return toast('SUDAH MAKS');if(st.gold<c)return toast('KOIN TIDAK CUKUP');st.gold-=c;T.lv=(T.lv|0)+1;T.up=T.at=T.sp=T.lv;toast(CHARS[T.id].name+' UPGRADE Lv'+T.lv+' (HP+ SERANG+ LAJU+)');autoShopShow()});
+  q('[data-hsell]',b=>b.onclick=e=>{e.stopPropagation();const i=+b.dataset.hsell;if(i===st.act||ro.length<2||!ro[i])return;st.gold+=Math.floor(autoCost(ro[i].id)/2);ro.splice(i,1);if(st.act>i)st.act--;autoShopShow()});
   q('[data-tac]',b=>b.onclick=()=>{st.tac=+b.dataset.tac;autoShopShow()});
   q('[data-mpgo]',b=>b.onclick=()=>autoMpReady(g));
   q('[data-mpmenu]',b=>b.onclick=()=>pauseGame())}
 /* ronde dimulai serentak begitu bit RDY kedua pemain terbaca di frame lockstep (lihat netStep) */
 {const _upMp=update;update=function(dt){_upMp(dt);const g=G;if(!g||!g.autoMp||g.phase!=='shop'||g.mpOver)return;if(g.mpRdy&&g.mpRdy[0]&&g.mpRdy[1])autoMpBegin(g,false)}}
 
+
+/* ---------- AUTO BATTLE versi biasa (single player): upgrade satu tombol + gacha ulang berbayar ---------- */
+function autoSpUpCost(st){return 9+3*(st.up|0)}
+function autoSpUpBtn(st){const lv=st.up|0,mx=lv>=AUTO_UP_MAX,c=autoSpUpCost(st),ok=!mx&&st.gold>=c;
+  return '<button data-upall="1" title="BAJA + SERANGAN + LAJU naik sekaligus" style="margin-top:.3em;line-height:1.15;'+autoBb(ok,['#b47a13','#ffe080'])+'">⬆ UPGRADE Lv'+lv+'/'+AUTO_UP_MAX+(mx?' · MAKS':' · '+c+' koin')+'<br><small>BAJA + SERANGAN + LAJU sekaligus</small></button>'}
+function autoSpRegacha(g){
+  const st=g.autoShop,f=g.p;if(!st||st.gold<AUTO_REGACHA||st.round>1||st.gDone)return null;
+  let n,t=0;do{n=autoGachaPick()}while(n===f.ch.id&&++t<30);const base=CHARS[n];if(!base)return null;
+  st.gold-=AUTO_REGACHA;st.offers=null;st.up=0;st.at=0;st.sp=0;f.lv=0;
+  f.chBase=base;f.ch=base;f.upKey=null;f.co=COS[n];f.w=base.fat?24:base.custom?[16,17,19][base.bt|0]:base.build?18:16;
+  autoUpgradeCh(g,f);hcPlace(g);autoAllyStats(g);autoFoeStats(g);camUpdate(0,true);return n}
+
+/* ---------- ITEM TERSEMBUNYI di arena (single player & multiplayer) ----------
+   Ada banyak titik rahasia di lantai/platform arena kotak. Tidak terlihat sebelum disentuh. Siapa pun (hero atau musuh) yang kebetulan
+   berdiri di atasnya saat ronde berjalan mendapat efeknya. Titik yang pernah ditemukan tetap terlihat samar di ronde berikutnya
+   (aktif lagi tiap ronde), jadi pemain bisa menyusun posisi awal. Tata letak diundi SEKALI per pertandingan memakai grand()
+   (deterministik di multiplayer: dipanggil di titik sinkron yang sama di kedua HP). */
+const AUTO_HID_T=[['heal',3,'HEAL +30%'],['shield',2,'PERISAI'],['dmg',2,'DAMAGE x2'],['vamp',1,'VAMPIR'],['speed',2,'SPEED UP'],['ult5',2,'ULTI +50'],['sword',1,'PEDANG'],['gun',1,'PISTOL'],['disc',1,'CAKRAM']];
+const AUTO_HID_Z=[[6,26,166],[84,156,150],[340,396,150],[454,474,166]];/* zona rahasia (lingkaran merah): atas peti kiri, platform kiri, platform kanan, atas peti kanan */
+function autoHidInit(g){
+  const tw=AUTO_HID_T.reduce((a,x)=>a+x[1],0),out=[];
+  const pick=()=>{let r=grand()*tw,t=AUTO_HID_T[0];for(const x of AUTO_HID_T){if(r<x[1]){t=x;break}r-=x[1]}return t};
+  if(isBox()){for(const z of AUTO_HID_Z){const x=Math.round(z[0]+grand()*(z[1]-z[0])),t=pick();out.push({x,y:z[2],t:t[0],n:t[2],used:false,known:false})}}
+  else{for(let i=0;i<4;i++){const p=autoSnap2(24+grand()*(WORLD_W-48),grand()>.5?FLOOR:60+grand()*150),t=pick();out.push({x:p.x,y:p.y,t:t[0],n:t[2],used:false,known:false})}}
+  g.hid=out}
+function autoHidReset(g){if(!g.hid)autoHidInit(g);for(const it of g.hid)it.used=false}
+function autoHidTick(g){
+  if(!g.hid)autoHidInit(g);
+  for(const it of g.hid){if(it.used)continue;
+    for(const f of g.hc.fs){if(f.hp<=0||f.state==='down'||f.out)continue;
+      if(Math.abs(f.x-it.x)<13&&Math.abs(f.y-it.y)<8){
+        it.used=true;it.known=true;
+        if(it.t==='heal'){f.hp=Math.min(hpMax(f),f.hp+hpMax(f)*.3);floatText(f.x,f.y-44,'HEAL +30%','#6aff6a');sfx('heal')}
+        else if(it.t==='ult5'){f.ult=Math.min(100,(f.ult||0)+50);floatText(f.x,f.y-44,'ULTI +50','#ff7aff');sfx('item')}
+        else autoMpApplyItem(f,it.t);
+        floatText(it.x,it.y-26,'ITEM RAHASIA!','#ffe070');starFx(it.x,it.y-8,'#ffe070',8);break}}}}
+function autoHidDraw(c,g){
+  const t=(g.time||0)*4;
+  for(const it of g.hid){if(!it.known||it.used)continue;
+    const r=5+Math.round(Math.sin(t+it.x)*1.5);
+    disc(c,Math.round(it.x),Math.round(it.y)-3,r+3,'rgba(255,224,112,.16)');disc(c,Math.round(it.x),Math.round(it.y)-3,r,'rgba(255,224,112,.28)');
+    c.fillStyle='#ffe070';c.fillRect(Math.round(it.x)-1,Math.round(it.y)-6,3,3);
+    c.fillRect(Math.round(it.x)-2,Math.round(it.y)-7,5,5);c.fillStyle='#fff6c0';c.fillRect(Math.round(it.x),Math.round(it.y)-6,1,3)}}
+{const _hpHid=hcPlace;hcPlace=function(g){const r=_hpHid.apply(this,arguments);if(g&&g.autoShop)autoHidReset(g);return r}}
+
+/* ---------- TAHAP BONUS BABI KOIN: tiap 3 ronde (single player & multiplayer) ----------
+   Arena penuh babi selama AUTO_PIG_TIME detik. Hero bertarung otomatis memburu babi; tiap babi yang kalah memberi koin
+   (babi emas lebih banyak). Babi adalah Fighter tim 2 yang digerakkan lewat grand() => deterministik di multiplayer.
+   Di multiplayer kedua hero berebut babi yang sama: koin diberikan ke hero terdekat saat babi kalah. */
+const AUTO_PIG_TIME=14,AUTO_PIG_N=12,AUTO_PIG_GOLD=2,AUTO_PIG_EVERY=3,AUTO_PIG_HP=14,AUTO_PIG_GHP=30;
+function autoPigHeroes(g){return g.autoMp?[g.p,g.e]:g.hc.fs.filter(q=>q.team===0&&!q.pig)}
+function autoPigTarget(g,f){
+  if(f.pig){let b=null,bd=1e9;for(const o of autoPigHeroes(g))if(o.hp>0){const d=Math.abs(o.x-f.x);if(d<bd){bd=d;b=o}}return b||g.p}
+  if(f.pt&&f.pt.hp>0&&f.pt.pig&&g.time-(f.ptT||0)<1.2)return f.pt;
+  let b=null,bd=1e9;for(const o of g.hc.fs)if(o.pig&&o.hp>0){const d=Math.abs(o.x-f.x)+Math.abs(o.y-f.y)*.5;if(d<bd){bd=d;b=o}}
+  f.pt=b;f.ptT=g.time;return b||(f===g.p?g.e:g.p)}
+function autoPigStart(g){
+  const W=isBox()?BOX_W:WORLD_W;let fs=g.hc.fs;
+  g.pigStage=true;g.pigT=AUTO_PIG_TIME;g.pigCoins=[0,0];
+  g.pigStash=g.autoMp?[]:fs.filter(f=>f.team!==0);/* single player: musuh ronde disingkirkan sementara */
+  if(g.pigStash.length){g.hc.fs=fs.filter(f=>f.team===0);fs=g.hc.fs;for(const f of g.pigStash)f.out=true}
+  if(g.autoMp){autoMpStats(g,g.mpB.map(b=>Object.assign({},b,{ult:null,eq:null})));g.e.team=0}
+  for(const f of autoPigHeroes(g)){f.dt=null;f.pt=null;f.hp=f.trail=hpMax(f);f.ult=Math.max(f.ult||0,30);f.spd=(f.spd||1)*1.15;f.pow=(f.pow||1)*1.3}/* hero lebih gesit & kuat selama bonus */
+  for(let i=0;i<AUTO_PIG_N;i++){
+    const gold=i>=AUTO_PIG_N-AUTO_PIG_GOLD,p=autoSnap2(30+grand()*(W-60),grand()>.45?FLOOR:60+grand()*150),
+      f=new Fighter(Object.assign({},CHARS.adit,{id:'adit',name:'BABI',hp:gold?AUTO_PIG_GHP:AUTO_PIG_HP,dmg:0}),false);
+    f.team=2;f.ai=null;f.isP=false;f.ctl={l:0,r:0,u:0,d:0};f.pig=true;f.dropDone=true;f.gold=gold;f.val=gold?3:1;f.spd=gold?.9:.7;f.fm=50+i;
+    f.x=p.x;f.y=p.y;f.vx=0;f.vy=0;f.onG=true;f.face=grand()>.5?1:-1;f.hp=f.trail=f.ch.hp;f.pw=grand()*.6;f.pd=0;
+    fs.push(f)}
+  g.phase='fight';g.hcGo=1;g.fT=0;
+  if(autoShopEl)autoShopEl.style.display='none';
+  toast('BONUS: BURU BABI KOIN! '+AUTO_PIG_TIME+' DETIK')}
+function autoPigClean(g){
+  for(const f of g.pigStash||[])f.out=false;g.hc.fs=g.hc.fs.filter(f=>!f.pig).concat(g.pigStash||[]);g.pigStash=null;{const fx=g.hc.fs,hd=[g.p,g.e].filter(q=>q&&fx.indexOf(q)>=0);g.hc.fs=hd.concat(fx.filter(q=>hd.indexOf(q)<0))}g.hc.brAlive=g.hc.fs.map(()=>true);g.hc.brLastAlive=g.hc.fs.length;
+  g.pigStage=false;if(g.autoMp)g.e.team=1;
+  for(const f of [g.p,g.e]){f.dt=null;f.pt=null}}
+function autoPigAbort(g){autoPigClean(g);g.hcGo=0}
+function autoPigEnd(g){
+  const me=g.autoMp?autoMpSide():0,got=g.pigCoins[me]|0,st=g.autoShop;
+  autoPigClean(g);if(st)st.gold+=got;
+  g.hcGo=0;g.hcWin=undefined;
+  newRound();g.phase='shop';
+  if(g.autoMp){g.mpRdy=[0,0];g.mpWait=false;NET.rdy=false;if(st)st.ready=false}
+  toast('BONUS SELESAI: +'+got+' KOIN');
+  autoShopShow()}
+function autoPigTick(g,dt){
+  g.pigT-=dt;const W=isBox()?BOX_W:WORLD_W,heroes=autoPigHeroes(g);let left=0;
+  for(const p of g.hc.fs.slice()){if(!p.pig)continue;
+    if(p.hp<=0){/* babi kalah: koin untuk hero terdekat */
+      let who=0,bd=1e9;heroes.forEach((h,i)=>{const d=Math.abs(h.x-p.x);if(h.hp>0&&d<bd){bd=d;who=i}});
+      const side=(g.autoMp?who:0);g.pigCoins[side]+=p.val;
+      floatText(p.x,p.y-30,'+'+p.val+' KOIN',p.gold?'#ffe070':'#fff0a0');starFx(p.x,p.y-12,'#ffe070',p.gold?10:5);burst(p.x,p.y-10,10,['#ffb0c0','#ff7f9f','#fff'],110,.4,30);sfx('item');
+      g.hc.fs.splice(g.hc.fs.indexOf(p),1);continue}
+    left++;
+    p.pw-=dt;p.ctl.u=0;
+    if(p.pw<=0){
+      let h=null,bd=1e9;for(const o of heroes)if(o.hp>0){const d=Math.abs(o.x-p.x);if(d<bd){bd=d;h=o}}
+      if(h&&bd<80&&grand()<.35)p.pd=p.x>=h.x?1:-1;else p.pd=Math.floor(grand()*3)-1;
+      if(p.x<34)p.pd=1;else if(p.x>W-34)p.pd=-1;
+      if(grand()<.18)p.ctl.u=1;p.pw=.35+grand()*.6}
+    p.ctl.l=p.pd<0?1:0;p.ctl.r=p.pd>0?1:0}
+  g.hc.brAlive=g.hc.fs.map(()=>true);
+  if(g.pigT<=0||left===0)autoPigEnd(g)}
+function autoPigHud(c,g){
+  const me=g.autoMp?autoMpSide():0,left=g.hc.fs.filter(f=>f.pig&&f.hp>0).length;
+  txt(c,'BONUS BABI KOIN',VW/2,10,2,'#ffb0c0','c','#14101e');
+  txt(c,'WAKTU '+Math.max(0,Math.ceil(g.pigT))+'   BABI '+left+'   KOIN +'+(g.pigCoins[me]|0),VW/2,26,1,'#ffffff','c','#14101e')}
+function autoPigDraw(c,f){
+  const x=Math.round(f.x),y=Math.round(f.y),fx=f.face>=0?1:-1,g=G,w=Math.floor((((g&&g.time)||0)*9+x*.05)%2),body=f.gold?'#ffd040':'#ff9ab0',dark=f.gold?'#c8901a':'#d46a88',snout=f.gold?'#ffe680':'#ff6f8f';
+  c.fillStyle='rgba(0,0,0,.3)';c.fillRect(x-8,y-1,16,2);
+  c.fillStyle=dark;c.fillRect(x-6,y-4,2,4+(w?0:-1));c.fillRect(x+4,y-4,2,4+(w?-1:0));c.fillRect(x-3,y-4,2,4+(w?-1:0));c.fillRect(x+1,y-4,2,4+(w?0:-1));
+  c.fillStyle=body;c.fillRect(x-8,y-12,16,9);c.fillStyle=dark;c.fillRect(x-8,y-5,16,2);
+  c.fillStyle=body;c.fillRect(x+fx*8-(fx<0?7:0),y-14,7,8);
+  c.fillStyle=dark;c.fillRect(x+fx*9-(fx<0?4:0),y-16,3,3);
+  c.fillStyle=snout;c.fillRect(x+fx*14-(fx<0?4:0),y-11,4,4);c.fillStyle='#7a2a3e';c.fillRect(x+fx*15-(fx<0?1:0),y-10,1,1);c.fillRect(x+fx*15-(fx<0?1:0),y-8,1,1);
+  c.fillStyle='#14101e';c.fillRect(x+fx*11-(fx<0?1:0),y-12,2,2);
+  c.fillStyle=dark;c.fillRect(x-fx*9-(fx<0?1:0),y-11,2,2);c.fillRect(x-fx*10-(fx<0?1:0),y-13,2,2);
+  const mx=f.ch.hp;if(f.hp<mx){c.fillStyle='#14101e';c.fillRect(x-7,y-20,14,3);c.fillStyle=f.gold?'#ffd040':'#ff6f8f';c.fillRect(x-6,y-19,Math.max(0,Math.round(12*f.hp/mx)),1)}
+  if(f.gold){const a=(((g&&g.time)||0)*5)%6.28;c.fillStyle='#fff';c.fillRect(x+Math.round(Math.cos(a)*9),y-24+Math.round(Math.sin(a)*3),2,2)}}
+{const _oppPig=oppOf;oppOf=function(f){const g=G;if(g&&g.pigStage&&g.hc)return autoPigTarget(g,f);return _oppPig(f)}}
+{const _upPig=update;update=function(dt){_upPig(dt);const g=G;if(g&&g.pigStage&&g.hc&&g.phase==='fight')autoPigTick(g,dt)}}
+{const _anPig=autoNext;autoNext=function(){const r=_anPig.apply(this,arguments),g=G;
+  if(r&&g&&g.autoShop&&g.hc&&!g.pigStage){g.pigCnt=(g.pigCnt||0)+1;if(g.pigCnt%AUTO_PIG_EVERY===0)autoPigStart(g)}
+  return r}}
+{const _erPig=endRound;endRound=function(){if(G&&G.pigStage)return;return _erPig.apply(this,arguments)}}/* babi tumbang bukan akhir ronde */
+
+/* ---------- STAGE WALUYO: musuh stage 1-7 hanya WALUYO, jumlahnya per stage (ubah AUTO_WALUYO untuk menyetel); stage 8 = BOS WALUYO raksasa ---------- */
+const AUTO_WALUYO=[1,1,2,2,3,3,3];
+const lv2f=st=>!!(st&&(st.level|0)>=2);
+const autoFoeName=st=>(st&&(st.level|0)>=2)?'WEBOY':'WALUYO';/* jumlah Waluyo di stage 1..7 */
+const autoWaluyoN=r=>AUTO_WALUYO[Math.min(AUTO_WALUYO.length,Math.max(1,r|0))-1];
+{const _alW=autoLineup;autoLineup=function(g){
+  const st=g.autoShop,h=g.hc;
+  if(g.autoMp||!st||!h||h.k!=='2v2'||g.pigStage)return _alW.apply(this,arguments);
+  const boss=autoIsBoss(g),n=boss?1:autoWaluyoN(st.round),e=g.e,W=isBox()?BOX_W:WORLD_W;
+  h.fs=h.fs.filter(f=>f.team===0||f===e||f.kp);/* buang Waluyo tambahan dari ronde sebelumnya */
+  if(!boss){
+    const lv2=(st.level|0)>=2,fid=lv2?'spiderman':'waluyo',base=CHARS[fid],mk=()=>Object.assign({},base,{name:autoFoeName(st)}),wd=base.fat?24:base.custom?[16,17,19][base.bt|0]:base.build?18:16;
+    if(e.w0)e.w=e.w0;e.big=0;e.bossMon=false;e.mn=null;
+    e.ch=mk();e.co=COS[fid];e.w=wd;e.w0=wd;e.hp=e.trail=e.ch.hp;e.out=false;e.dropDone=false;e.fm=10;
+    const xs=[.72,.6,.84];
+    e.reset(Math.round(W*xs[0]),-1);
+    for(let i=1;i<n;i++){
+      const f=new Fighter(mk(),false);f.team=1;f.co=i%2?mirrorCos(COS[fid]):COS[fid];f.ai=newAI();f.isP=false;f.ctl={l:0,r:0,u:0,d:0};f.fm=10+i;
+      h.fs.push(f);f.reset(Math.round(W*xs[i%xs.length]),-1);f.out=false;f.dropDone=false}
+  }
+  _alW.apply(this,arguments);
+  if(boss&&lv2f(st))for(const f of h.fs)if(f.team!==0&&!f.kp)f.pow=(f.pow||1)*1.15;/* bos level 2 lebih kuat */
+  h.brAlive=h.fs.map(()=>true);h.brLastAlive=h.fs.length;
+  if(!boss){autoFoeStats(g);if(n>1)for(const f of h.fs)if(f.team!==0&&!f.kp)f.pow=(f.pow||1)*(1-.07*(n-1));if(lv2f(st))for(const f of h.fs)if(f.team!==0&&!f.kp)f.pow=(f.pow||1)*1.3;/* level 2: musuh lebih kuat */
+    toast((lv2f(st)?'LV2 ':'')+'STAGE '+st.round+': '+n+' '+autoFoeName(st)+'!')}
+}}
+{const _scW=autoScoutText;autoScoutText=function(g){
+  const st=g.autoShop;if(st&&st.round>=AUTO_MAX_ROUND&&lv2f(st))return '👑 Musuh: BOS WEBOY RAKSASA · waspada HENTAKAN & pasukan ANAK JARING';
+  if(!st||st.round>=AUTO_MAX_ROUND)return _scW.apply(this,arguments);
+  return 'Musuh: <b>'+autoWaluyoN(st.round)+' '+autoFoeName(st)+'</b> · makin tinggi stage makin banyak'}}
+/* ---------- LEVEL 2: setelah BOS WALUYO kalah, stage mulai lagi dari 1 melawan WEBOY (Spiderman); bos akhir = BOS WEBOY raksasa ---------- */
+{const _anL=autoNext;autoNext=function(){const g=G,st=g&&g.autoShop;
+  if(st&&!g.autoMp&&g.hc&&g.hc.k==='2v2'&&g.hcWin&&st.round>=AUTO_MAX_ROUND&&(st.level|0)<2){
+    st.level=2;st.round=0;st.lives=Math.min(AUTO_LIVES,st.lives+1);st.gold+=15;st.streak=0;st.offers=null;
+    const r=_anL.apply(this,arguments);if(r){st.lb='LEVEL 2! bonus +15 koin, +1 nyawa';toast('LEVEL 2! MUSUH BARU: WEBOY')}return r}
+  return _anL.apply(this,arguments)}}
+/* ---------- TOKO AUTO BATTLE (single player) versi ringkas: tim 3 hero (1 utama + 2 beli), upgrade per hero (simbol), toko 2 hero + 3 item ---------- */
+const autoSpUpCost2=lv=>9+3*(lv|0);
+autoRoll=function(g){
+  const owned=g.hc.fs.filter(f=>f.team===0).map(f=>f.ch.id),
+    pool=HC_CH.filter(x=>CHARS[x]&&x!=='copy'&&owned.indexOf(x)<0),
+    hs=shuf(pool.slice()).slice(0,2).map(x=>'h:'+x),
+    it=shuf(AUTO_ITEMS.filter(x=>x.id.indexOf('sm_')!==0)).slice(0,3).map(x=>'n:'+x.id);
+  if(it.length&&Math.random()<AUTO_SCROLL_CHANCE){const u=autoScrollPick(g);if(u)it[Math.floor(Math.random()*it.length)]='u:'+u}
+  g.autoShop.offers=hs.concat(it)};
+function autoSpShop(){
+  const g=G;if(!g||!g.autoShop||g.autoMp)return;
+  if(!autoShopEl){autoShopEl=document.createElement('div');autoShopEl.id='autoShop';
+    autoShopEl.style.cssText='position:fixed;z-index:99999;inset:2%;display:flex;align-items:stretch;justify-content:center;color:white;font-family:inherit;pointer-events:auto';document.body.appendChild(autoShopEl)}
+  autoShopEl.style.display='flex';document.body.classList.add('auto2v2');autoShopCss();
+  const h=g.hc,st=g.autoShop,a0=h.fs.filter(f=>f.team===0);a0.forEach((f,i)=>{if(f.fm===undefined)f.fm=i});
+  const allies=a0.slice().sort((x,y)=>x.fm-y.fm),main=g.p;
+  if(!st.offers)autoRoll(g);
+  const inv=st.inv=st.inv||[],pk=st.pick&&autoItem(st.pick)?st.pick:null,r=st.round,boss=r>=AUTO_MAX_ROUND,bonus=Math.min(3,Math.floor(st.gold/10)),pct=Math.round((autoFoePow(r-1)-1)*100),val=f=>Math.floor(autoCost(f.ch.id)/2);
+  let trk='';for(let i=1;i<=AUTO_MAX_ROUND;i++)trk+='<span class="as-n'+(i<r?' dn':i===r?' cu':'')+(i===AUTO_MAX_ROUND?' bs':'')+'">'+(i===AUTO_MAX_ROUND?'👑':i<r?'✓':i)+'</span>'+(i<AUTO_MAX_ROUND?'<i></i>':'');
+  const card=(f,idx)=>{const isM=f===main,lv=f.lv|0,mx=lv>=AUTO_UP_MAX,c=autoSpUpCost2(lv),ok=!mx&&st.gold>=c;
+    return '<div class="as-hero'+(isM?' main':'')+'"><div class="as-hp">'+autoPorImg(f.ch.id)+(isM?'<em>UTAMA</em>':'')+'</div>'
+     +'<div class="as-hi" style="flex:1;min-width:0"><div class="as-hn"><b>'+f.ch.name+'</b></div>'
+     +'<button class="as-slot'+(f.eq?' fill':'')+(pk?' pk':'')+'" data-slot="'+idx+'" title="'+(f.eq?autoItem(f.eq).n:'Pasang item')+'" style="font-size:1.25em;min-height:40px">'+(pk?'⤓':f.eq?autoIco(f.eq):'＋')+'</button>'
+     +(isM&&st.ultId&&CHARS[st.ultId]?'<button data-ultx="1" title="Lepas gulungan ulti" style="margin-top:.2em;font-size:.75em;padding:.1em .4em;background:#4a2a6a;border-color:#c09aff">📜 '+autoUltInfo(st.ultId).n+' ✕</button>':'')+'</div>'
+     +'<div style="display:flex;flex-direction:column;gap:.3em;align-items:stretch">'
+     +'<button data-hup="'+idx+'" title="Upgrade '+(mx?'MAKS':c+' koin')+' · BAJA + SERANGAN + LAJU" style="font-size:1.35em;padding:.15em .5em;line-height:1;'+autoBb(ok,['#b47a13','#ffe080'])+'">⬆<small style="font-size:.5em;display:block">'+lv+'/'+AUTO_UP_MAX+'</small></button>'
+     +(isM?'':'<button class="as-sell" data-sell="'+idx+'">✕<br>+'+val(f)+'</button>')+'</div></div>'};
+  let heroes=allies.map(card).join('');for(let i=allies.length;i<AUTO_TEAM_MAX;i++)heroes+='<div class="as-hero empt" style="justify-content:center;opacity:.55;min-height:3.6em"><span>+ HERO · beli di toko</span></div>';
+  const stage='<div class="as-stage'+(boss?' bs':'')+'" style="padding:.4em .6em"><b>'+(lv2f(st)?'LV2 · ':'')+'STAGE '+r+'/'+AUTO_MAX_ROUND+'</b> · '+(boss?'👑 BOS '+autoFoeName(st):autoFoeName(st)+' ×'+autoWaluyoN(r)+' · musuh '+(pct>=0?'+':'')+pct+'%')+' · bunga +'+bonus+' · streak '+(st.streak||0)+(st.lb?'<div class="dim">'+st.lb+'</div>':'')+'</div>';
+  const offers=st.offers.map(id=>{
+    if(!id)return '<div class="as-off sold">TERJUAL</div>';
+    if(id.indexOf('h:')===0){const hid=id.slice(2);if(!CHARS[hid])return '<div class="as-off sold">TERJUAL</div>';const c=autoCost(hid),ok=st.gold>=c&&allies.length<AUTO_TEAM_MAX;
+      return '<button class="as-off'+(ok?'':' no')+'" data-buy="'+id+'">'+autoPorImg(hid,'as-op')+'<b>'+CHARS[hid].name+'</b><small>HERO · '+autoTag(CHARS[hid])+'</small><em>'+c+'</em></button>'}
+    if(id.indexOf('u:')===0){const hid=id.slice(2);if(!CHARS[hid])return '<div class="as-off sold">TERJUAL</div>';const u=autoUltCost(hid),I=autoUltInfo(hid),ok=st.gold>=u;
+      return '<button class="as-off '+I.r+(ok?'':' no')+'" data-buy="'+id+'" title="'+I.d+'">'+autoPorImg(hid,'as-op')+'<span class="as-rar '+I.r+'">'+I.r+'</span><b class="un">📜 '+I.n+'</b><small>GULUNGAN ULTI</small><em>'+u+'</em></button>'}
+    const x=autoItem(id.replace(/^[ni]:/,''));if(!x)return '<div class="as-off sold">TERJUAL</div>';const c=autoItemCost(x),ok=st.gold>=c;
+    return '<button class="as-off'+(ok?'':' no')+'" data-buy="'+id+'" title="'+x.d+'">'+autoIco(x.id)+'<b>'+x.n+'</b><small>'+x.d+'</small><em>'+c+'</em></button>'}).join('');
+  let bag='';for(let i=0;i<AUTO_INV_MAX;i++){const id=inv[i];bag+=id?'<button data-bi="'+i+'" title="'+autoItem(id).d+'" style="'+(pk===id?'background:#d6a31a;border-color:#fff0a6;color:#2b1700':'background:#6b4a00;border-color:#ffe066')+'">'+autoIco(id)+'<br>'+autoItem(id).n+'</button>':'<div class="em">kosong</div>'}
+  let pop='';
+  if(st.help)pop='<div class="as-pop"><div class="as-pb help"><h2>CARA MAIN</h2>• Timmu: 1 hero UTAMA (gacha) + maksimal 2 hero yang dibeli di toko. Hero utama gugur = ronde kalah (nyawa -1). Hero beli yang gugur hilang, beli lagi di toko.<br>• Toko menjual 2 HERO dan 3 ITEM. Ketuk kartu = beli. Hero yang dibeli bisa dijual (✕ +koin), hero utama tidak.<br>• ⬆ di kartu hero = upgrade sekali bayar (BAJA + SERANGAN + LAJU naik sekaligus, maks Lv'+AUTO_UP_MAX+'). Tiap hero punya level sendiri.<br>• Item: ketuk item di TAS lalu ketuk slot ITEM hero. POTION otomatis saat HP rendah. 📜 gulungan ulti dipakai sekali oleh hero utama.<br>• Makin banyak hero, musuh makin kuat. Tiap 3 ronde ada tahap BONUS BABI KOIN.<br>• ATUR POSISI: seret hero di arena sebelum ronde.<button data-help="1" class="as-pc" style="margin-top:.6em">TUTUP</button></div></div>';
+  autoShopEl.innerHTML='<div class="as-pn"><div class="as-hd"><div class="as-ttl">AUTO BATTLE</div><div class="as-trk">'+trk+'</div><div class="as-chips"><button class="as-q" data-help="1">?</button><span class="as-chip" style="color:#ff7a7a">'+'♥'.repeat(st.lives)+'</span><span class="as-chip" style="color:#ffd040">🪙 '+st.gold+'</span></div></div>'
+   +'<div class="as-am"><div class="as-l"><div class="as-sec"><span>TIM ('+allies.length+'/'+AUTO_TEAM_MAX+')</span></div>'+heroes+stage+'</div>'
+   +'<div class="as-r"><div class="as-sec"><span>TOKO · 2 HERO + 3 ITEM</span></div><div class="as-of">'+offers+'</div>'
+   +'<div class="as-sec"><span>TAS ITEM ('+inv.length+'/'+AUTO_INV_MAX+')</span><span style="font-weight:normal;opacity:.8">'+(pk?autoItem(pk).d+' · ketuk slot ITEM hero':'ketuk item, lalu slot ITEM hero')+'</span></div><div class="as-bag">'+bag+'</div>'
+   +'<div class="as-row" style="margin-top:auto"><button data-reroll="1" style="'+(st.gold>=AUTO_REROLL?'background:#1d7f7f;border-color:#80ffff':'opacity:.55')+'">ACAK · '+AUTO_REROLL+'</button><button data-lock="1" style="'+(st.lock?'background:#d6a31a;border-color:#fff0a6;color:#2b1700':'')+'">'+(st.lock?'TERKUNCI':'KUNCI TOKO')+'</button></div>'
+   +'</div></div>'
+   +'<div class="as-ft"><button data-automenu="1" style="background:#7a1f1f;border-color:#ff9a9a">MENU</button><button data-autopos="1" style="background:#1d6f9f;border-color:#8ad8ff">📍 ATUR POSISI</button><button data-autofight="1" class="as-go">▶ MULAI RONDE '+r+'</button></div>'+pop+'</div>';
+  const q=(sel,fn)=>autoShopEl.querySelectorAll(sel).forEach(fn);
+  q('[data-help]',b=>b.onclick=()=>{st.help=!st.help;autoShopShow()});
+  q('[data-buy]',b=>b.onclick=()=>{const id=b.dataset.buy,ix=st.offers.indexOf(id);if(ix<0)return;
+    if(id.indexOf('h:')===0){const hid=id.slice(2);if(!CHARS[hid])return;
+      if(allies.length>=AUTO_TEAM_MAX)return toast('TIM PENUH (MAKS '+AUTO_TEAM_MAX+' HERO) · JUAL HERO DULU');
+      if(allies.some(f=>f.ch.id===hid))return toast('SUDAH PUNYA HERO INI');
+      const c=autoCost(hid);if(st.gold<c)return toast('KOIN TIDAK CUKUP');
+      st.gold-=c;const f=new Fighter(CHARS[hid],false);f.team=0;f.co=COS[hid];f.ai=newAI();f.isP=false;f.ctl={l:0,r:0,u:0,d:0};f.star=1;f.lv=0;f.fm=Math.max(...allies.map(x=>x.fm))+1;
+      autoUpgradeCh(g,f);h.fs.push(f);st.offers[ix]=null;toast('HERO BARU: '+CHARS[hid].name);return autoRefresh(g)}
+    if(id.indexOf('u:')===0){const hid=id.slice(2);if(!CHARS[hid]||hid==='copy'||hid===main.ch.id)return;const u=autoUltCost(hid),I=autoUltInfo(hid);
+      if(st.gold<u)return toast('KOIN TIDAK CUKUP');
+      st.gold-=u;st.ultId=hid;st.offers[ix]=null;toast('GULUNGAN '+I.n+' ['+I.r+'] TERPASANG · SEKALI PAKAI');return autoShopShow()}
+    const x=autoItem(id.replace(/^[ni]:/,''));if(!x)return;const c=autoItemCost(x);
+    if(inv.length>=AUTO_INV_MAX)return toast('TAS ITEM PENUH');if(st.gold<c)return toast('KOIN TIDAK CUKUP');
+    st.gold-=c;inv.push(x.id);st.offers[ix]=null;toast('ITEM: '+x.n);autoShopShow()});
+  q('[data-ultx]',b=>b.onclick=()=>{st.ultId=null;toast('ULTI DILEPAS');autoShopShow()});
+  q('[data-sell]',b=>b.onclick=()=>{const f=allies[+b.dataset.sell];if(!f||f===main)return;st.gold+=val(f);if(f.eq&&inv.length<AUTO_INV_MAX)inv.push(f.eq);h.fs.splice(h.fs.indexOf(f),1);toast('HERO DIJUAL +'+val(f));autoRefresh(g)});
+  q('[data-slot]',b=>b.onclick=()=>{const f=allies[+b.dataset.slot];if(!f)return;
+    if(pk){const k=inv.indexOf(pk);if(k>=0){inv.splice(k,1);if(f.eq)inv.push(f.eq);f.eq=pk}st.pick=null;return autoShopShow()}
+    if(f.eq){if(inv.length>=AUTO_INV_MAX)return toast('TAS PENUH');inv.push(f.eq);f.eq=null;return autoShopShow()}
+    toast('PILIH ITEM DI TAS DULU')});
+  q('[data-bi]',b=>b.onclick=()=>{const id=inv[+b.dataset.bi];st.pick=st.pick===id?null:id;autoShopShow()});
+  q('[data-reroll]',b=>b.onclick=()=>{if(st.gold<AUTO_REROLL)return toast('KOIN TIDAK CUKUP');st.gold-=AUTO_REROLL;autoRoll(g);autoShopShow()});
+  q('[data-lock]',b=>b.onclick=()=>{st.lock=!st.lock;autoShopShow()});
+  q('[data-hup]',b=>b.onclick=()=>{const f=allies[+b.dataset.hup];if(!f)return;const lv=f.lv|0,c=autoSpUpCost2(lv);
+    if(lv>=AUTO_UP_MAX)return toast('SUDAH MAKS');if(st.gold<c)return toast('KOIN TIDAK CUKUP · UPGRADE '+c);
+    st.gold-=c;f.lv=lv+1;autoUpgradeCh(g,f);f.hp=f.trail=f.ch.hp;autoAllyStats(g);toast(f.ch.name+' UPGRADE Lv'+f.lv);autoShopShow()});
+  q('[data-autopos]',b=>b.onclick=()=>autoPosStart());
+  q('[data-autofight]',b=>b.onclick=()=>{autoShopEl.style.display='none';for(const f of g.hc.fs){f.isP=false;f.ai=f.ai||newAI();f.ctl={l:0,r:0,u:0,d:0}}g.phase='count';g.cT=0;g.cN=-1;st.started=true});
+  q('[data-automenu]',b=>b.onclick=()=>{autoShopEl.style.display='none';modeOff();G=null;returnTo='menu';go('menu')})}
 /* ===== V93: TOWER KOTA yang bisa dihancurkan (hanya mode BUTO, peta ATAP SENJA) =====
    4 tower di bagian lantai yang tidak tertutup pijakan. Bukan penghalang (petarung tetap bisa lewat), tapi
    setiap serangan (pukulan, tendangan, ulti) yang kotak seranginya menyentuh tower mengurangi HP-nya.
