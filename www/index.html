@@ -1033,7 +1033,26 @@ body:not(.twui) #ult canvas,body:not(.twui) #ult2 canvas{filter:brightness(0) dr
    [01] KONFIGURASI, UTILITAS & PENYIMPANAN
    Ukuran dunia, konstanta, helper matematika, localStorage, pengaturan (S)
    ===================================================================== */
-const PORT_W=3800,BR_W=7600,BOX_W=480,ITEM_W=1800,VW=480,VH=270,FLOOR=230,GRAV=1000,WIN=.26;let WORLD_W=720;const isPortId=m=>m==='port'||m==='portx'||m==='forest',portW=m=>m==='portx'?BR_W:PORT_W;let PORT_LW=0,PORT_PLW=0;/* V74: map PELABUHAN RAYA (portx) = pelabuhan 7600px untuk duel biasa */function syncWorld(){WORLD_W=(G?G.map:mapPick)==='kotak'?BOX_W:G&&G.hc&&G.hc.k==='br'?BR_W:isPortId(G?G.map:mapPick)?portW(G?G.map:mapPick):(G?G.map:mapPick)==='moon'?MOON_W:(G?G.map:mapPick)==='item'?ITEM_W:720}function startX(isP){const m=isPortId(mapPick)?portW(mapPick)/2:mapPick==='moon'?1200:mapPick==='kotak'?BOX_W/2:mapPick==='item'?ITEM_W/2:360;return isP?m-110:m+110}
+function BXM(m){return m==='kotak'||m==='putar'}
+const isPutar=()=>((G?G.map:mapPick)==='putar');
+const beltV=t=>Math.sin((t||0)*.45)*42;/* kecepatan lantai berjalan: bolak-balik pelan (deterministik) */
+const PUTAR_BOX=[];/* tanpa kotak/drop item */
+/* TROLI: dua troli naik-turun (berlawanan arah) di dekat dinding kiri & kanan; injak lalu naik/turun */
+const PUTAR_CARTS=[{x:12,w:48,base:160,amp:62,sp:.9,ph:0},{x:420,w:48,base:160,amp:62,sp:.9,ph:Math.PI}];
+function putarCarts(g){if(!g||g.map!=='putar')return [];if(!g.carts)g.carts=PUTAR_CARTS.map(c=>({x:c.x,w:c.w,h:8,ow:1,c:5,y:c.base,dx:0,dy:0,base:c.base,amp:c.amp,sp:c.sp,ph:c.ph}));return g.carts}
+function putarSync(){const g=G;if(!g||g.map!=='putar')return;const t=g.time;if(g._cs===t)return;g._cs=t;for(const p of putarCarts(g)){const ny=p.base+p.amp*Math.sin(t*p.sp+p.ph);let dy=ny-p.y;if(Math.abs(dy)>30)dy=0;p.dy=dy;p.y=ny}}
+function putarItems(g){if(!g.ibx)g.ibx=PUTAR_BOX.map(b=>({x:b.x,y:b.y,rt:0}));return g.ibx}
+function putarBoxHit(e){const g=G;if(!g||g.map!=='putar'||g.phase!=='fight'||e.hp<=0||e.state==='down'||!e.ch)return;
+  for(const b of putarItems(g)){if(b.rt>g.time)continue;
+    const near=Math.abs(e.x-b.x)<16||(e.attack&&Math.abs(e.x+e.face*22-b.x)<18);
+    if(!near||Math.abs(e.y-b.y)>30)continue;
+    b.rt=g.time+12;const tw=AUTO_HID_T.reduce((a,x)=>a+x[1],0);let r=grand()*tw,t=AUTO_HID_T[0];for(const x of AUTO_HID_T){if(r<x[1]){t=x;break}r-=x[1]}
+    const mx=(typeof hpMax==='function')?hpMax(e):(e.ch.hp||100);
+    if(t[0]==='heal'){e.hp=Math.min(mx,e.hp+mx*.3);floatText(e.x,e.y-44,'HEAL +30%','#6aff6a');sfx('heal')}
+    else if(t[0]==='ult5'){e.ult=Math.min(100,(e.ult||0)+50);floatText(e.x,e.y-44,'ULTI +50','#ff7aff');sfx('item')}
+    else autoMpApplyItem(e,t[0]);
+    burst(b.x,b.y-8,14,['#ffd040','#ffffff','#b07a30'],140,.5,80);floatText(b.x,b.y-26,'KOTAK PECAH!','#ffe070');sfx('item');break}}
+const PORT_W=3800,BR_W=7600,BOX_W=480,ITEM_W=1800,VW=480,VH=270,FLOOR=230,GRAV=1000,WIN=.26;let WORLD_W=720;const isPortId=m=>m==='port'||m==='portx'||m==='forest',portW=m=>m==='portx'?BR_W:PORT_W;let PORT_LW=0,PORT_PLW=0;/* V74: map PELABUHAN RAYA (portx) = pelabuhan 7600px untuk duel biasa */function syncWorld(){WORLD_W=BXM((G?G.map:mapPick))?BOX_W:G&&G.hc&&G.hc.k==='br'?BR_W:isPortId(G?G.map:mapPick)?portW(G?G.map:mapPick):(G?G.map:mapPick)==='moon'?MOON_W:(G?G.map:mapPick)==='item'?ITEM_W:720}function startX(isP){const m=isPortId(mapPick)?portW(mapPick)/2:mapPick==='moon'?1200:BXM(mapPick)?BOX_W/2:mapPick==='item'?ITEM_W/2:360;return isP?m-110:m+110}
 /* kecepatan parallax tiap lapisan (1 = sama dengan tanah/kamera) */
 const SPAN=WORLD_W-VW,PX={sky:.05,cloud:.1,far:.3,hill:.45,mid:.6,fg:1.35};
 /* V8: sinematik kemenangan (detik nyata): jeda -> zoom ke pemenang -> jeda napas -> teks -> (ronde biasa) zoom keluar */
@@ -1290,11 +1309,12 @@ const isItemAr=()=>((G?G.map:mapPick)==='item');
 const ITEM_PLATS=[];
 const ITEM_SPAWNS=(()=>{const a=[];for(let i=0;i<12;i++)a.push({x:Math.round(ITEM_W*(i+1)/13),y:230});for(const k of [1.5,3.5,5.5,7.5,9.5,11.5])a.push({x:Math.round(ITEM_W*k/13),y:172});return a})();
 /* ===== ARENA KOTAK: ruang tertutup 1 layar (480x270). Kamera diam & menampilkan seluruh arena; dinding kiri/kanan + plafon; box & pijakan untuk naik-turun ===== */
-const isBox=()=>((G?G.map:mapPick)==='kotak');
-const brWd=g=>g&&g.map==='kotak'?BOX_W:BR_W;
-const BOX_SOLIDS=[];/* blok peti dihapus: hero AUTO (Weboy/Herth/Ninja) menyerang peti, bukan lawan */
+const isBox=()=>(BXM((G?G.map:mapPick)));
+const brWd=g=>g&&BXM(g.map)?BOX_W:BR_W;
+const BOX_SOLIDS=[{x:32,y:198,w:32,h:32,t:'crate'},{x:0,y:198,w:32,h:32,t:'crate'},{x:0,y:166,w:32,h:32,t:'crate'},
+  {x:416,y:198,w:32,h:32,t:'crate'},{x:448,y:198,w:32,h:32,t:'crate'},{x:448,y:166,w:32,h:32,t:'crate'}];
 const BOX_PLATS=[{x:76,y:150,w:88,h:8,ow:1,c:0},{x:316,y:150,w:88,h:8,ow:1,c:1},{x:190,y:118,w:100,h:8,ow:1,c:2},{x:214,y:178,w:52,h:8,ow:1,c:3}];
-const BOX_SPAWNS=[{x:110,y:230},{x:190,y:230},{x:290,y:230},{x:370,y:230},{x:16,y:230},{x:464,y:230},{x:120,y:150},{x:360,y:150},{x:240,y:118},{x:240,y:178}];
+const BOX_SPAWNS=[{x:110,y:230},{x:190,y:230},{x:290,y:230},{x:370,y:230},{x:16,y:166},{x:464,y:166},{x:120,y:150},{x:360,y:150},{x:240,y:118},{x:240,y:178}];
 let _bxBg=null,_bxCr=null;
 function boxBuild(){
   const cv=mkCv(VW,VH),c=cv.getContext('2d');
@@ -1324,11 +1344,30 @@ function drawBoxArena(c,time){
   c.drawImage(_bxBg,0,0);
   const pz=.5+.5*Math.sin(time*2);c.strokeStyle='rgba(40,224,255,'+(.3+.2*pz).toFixed(2)+')';c.lineWidth=1;c.strokeRect(8.5,8.5,VW-17,FLOOR-8);
   for(const p of BOX_PLATS)drawBoxPlat(c,p,time);
-  for(const q of BOX_SOLIDS)c.drawImage(_bxCr,q.x,q.y);
+  if(!isPutar()){for(const q of BOX_SOLIDS)c.drawImage(_bxCr,q.x,q.y);return}
+  {/* ARENA PUTAR: lantai berjalan, portal dinding, kotak item */
+    const bv=beltV(time),dr=bv>=0?1:-1,col=dr>0?'#ffb030':'#40e0ff',off=(((-42/.45*Math.cos(time*.45))%12)+12)%12;
+    c.fillStyle='#101428';c.fillRect(0,FLOOR,VW,10);c.fillStyle=col;c.fillRect(0,FLOOR,VW,1);
+    for(let x=-12;x<VW+12;x+=12){const px=Math.round(x+off);c.fillStyle=col;
+      for(let k=0;k<3;k++){c.fillRect(px+(dr>0?k:2-k),FLOOR+2+k*2,2,2);c.fillRect(px+(dr>0?k:2-k),FLOOR+8-k*2,2,2)}}
+    const pz=.5+.5*Math.sin(time*5);
+    for(const sx of [0,VW-9]){const gr=c.createLinearGradient(sx,0,sx+9,0);gr.addColorStop(sx?1:0,'rgba(255,80,255,'+(.55+.3*pz).toFixed(2)+')');gr.addColorStop(sx?0:1,'rgba(255,80,255,0)');c.fillStyle=gr;c.fillRect(sx,8,9,FLOOR-8)}
+    {const cg=(G&&G.map==='putar')?G:null,cl=cg?putarCarts(cg):PUTAR_CARTS.map(q=>({x:q.x,w:q.w,y:q.base}));
+      for(const q of cl){const cx=Math.round(q.x+q.w/2),y=Math.round(q.y);
+        c.fillStyle='#2a2f4e';c.fillRect(cx-1,10,2,FLOOR-10);c.fillStyle='#454c72';c.fillRect(cx-1,10,1,FLOOR-10);
+        c.fillStyle='#0c0816';c.fillRect(q.x-1,y-1,q.w+2,14);c.fillStyle='#8a5a22';c.fillRect(q.x,y,q.w,12);
+        c.fillStyle='#ffd040';c.fillRect(q.x,y,q.w,2);c.fillStyle='#5a3a12';for(let k=6;k<q.w-3;k+=10)c.fillRect(q.x+k,y+3,2,9);
+        c.fillStyle='#0c0816';c.fillRect(q.x+6,y+11,8,5);c.fillRect(q.x+q.w-14,y+11,8,5);c.fillStyle='#9aa0c8';c.fillRect(q.x+8,y+12,4,3);c.fillRect(q.x+q.w-12,y+12,4,3)}}
+    const g=(G&&G.map==='putar')?G:null,bl=g?putarItems(g):PUTAR_BOX.map(b=>({x:b.x,y:b.y,rt:0}));
+    for(const b of bl){if(g&&b.rt>g.time)continue;const x=Math.round(b.x)-7,y=Math.round(b.y)-14;
+      c.fillStyle='#0c0816';c.fillRect(x-1,y-1,16,16);c.fillStyle='#b8782c';c.fillRect(x,y,14,14);c.fillStyle='#e0a050';c.fillRect(x,y,14,2);
+      c.fillStyle='#7a4a18';c.fillRect(x,y+6,14,2);c.fillRect(x+6,y,2,14);c.fillStyle='#ffe070';c.fillRect(x+5,y+5,4,4);
+      if(Math.floor(time*3)%2===0){c.fillStyle='#ffffff';c.fillRect(x+11,y+2,2,2)}}
+  }
 }
 /* V77: BATTLE ROYALE memakai arena pilihan pemain. Arena 720px (Padang/Kota Neon/Atap Senja) diulang (tile) sepanjang dunia BR 7600px */
 const BR_TILE=720,NOSOL=[],_brTc=new WeakMap();
-const isBRW=()=>!!(G&&G.hc&&G.hc.k==='br'&&!isPortId(G.map)&&G.map!=='kotak');
+const isBRW=()=>!!(G&&G.hc&&G.hc.k==='br'&&!isPortId(G.map)&&!BXM(G.map));
 function brTiled(arr){if(!isBRW())return arr;let t=_brTc.get(arr);if(!t){t=[];for(let k=0;k*BR_TILE<BR_W;k++)for(const o of arr){const x=o.x+k*BR_TILE;if(x+(o.w||0)>BR_W-20)continue;t.push(Object.assign({},o,{x}))}_brTc.set(arr,t)}return t}
 function brOffs(cx){if(!isBRW())return [0];const a=[];for(let k=0;k*BR_TILE<BR_W;k++){if((k+1)*BR_TILE>cx-8&&k*BR_TILE<cx+VW+8)a.push(k*BR_TILE)}return a.length?a:[0]}
 const bgCam=cam=>isBRW()?120+120*Math.sin(cam*.0016):clamp(cam,0,240);
@@ -1355,7 +1394,7 @@ function brSpawnsFor(plats){let r=_brSp.get(plats);if(r)return r;r=[];
 /* V80: latar BR menyambung: gambar latar diulang dengan cermin (mirror) sehingga sambungan antar-tile mulus */
 function brMirror(c,img,o){const W=img.width;o=Math.round(o);const k0=Math.floor(o/W),k1=Math.floor((o+VW)/W);for(let k=k0;k<=k1;k++){const x=k*W-o;if(((k%2)+2)%2===1){c.save();c.translate(x+W,0);c.scale(-1,1);c.drawImage(img,0,0);c.restore()}else c.drawImage(img,x,0)}}
 function drawFgTiled(c,img,cam,y){const w=img.width;let x=-Math.round((cam*PX.fg)%w);for(;x<VW;x+=w)c.drawImage(img,x,y)}
-const curSolids=()=>((G&&G.map==='meadow')||(!G&&mapPick==='meadow'))?NOSOL:isBox()?BOX_SOLIDS:(isBRW()||isNeon()||isDusk()||isTaman()||isLava()||isItemAr()||isMoon()||isPortId(G?G.map:mapPick))?NOSOL:SOLIDS/* TAHAP 7.3: Pelabuhan tidak punya blok padang; dulu proyektil mati di 3 blok tak terlihat *//* V79: BR tanpa blok penghalang, karakter berjalan leluasa */,curPlats=()=>{if(isBox())return BOX_PLATS;if(isMoon())return moonPlats();if((G&&G.map==='meadow')||(!G&&mapPick==='meadow'))return [];const b=isItemAr()?ITEM_PLATS:isNeon()?NEON_PLATS:isDusk()?DUSK_PLATS:isTaman()?TAMAN_PLATS:isLava()?LAVA_PLATS:isMoon()?MOON_PLATS:PLATS;return isBRW()?brVarPlats(b):b},curSpawns=()=>isBox()?BOX_SPAWNS:isBRW()?brSpawnsFor(curPlats()):((G&&G.map==='meadow')||(!G&&mapPick==='meadow'))?M1_SPAWNS:(isItemAr()?ITEM_SPAWNS:isMoon()?MOON_SPAWNS:(isNeon()||isDusk()||isTaman()||isLava())?NEON_SPAWNS:SPAWNS_FAIR);
+const curSolids=()=>((G&&G.map==='meadow')||(!G&&mapPick==='meadow'))?NOSOL:isBox()?(isPutar()?NOSOL:BOX_SOLIDS):(isBRW()||isNeon()||isDusk()||isTaman()||isLava()||isItemAr()||isMoon()||isPortId(G?G.map:mapPick))?NOSOL:SOLIDS/* TAHAP 7.3: Pelabuhan tidak punya blok padang; dulu proyektil mati di 3 blok tak terlihat *//* V79: BR tanpa blok penghalang, karakter berjalan leluasa */,curPlats=()=>{if(isBox())return (G&&G.map==='putar')?BOX_PLATS.concat(putarCarts(G)):BOX_PLATS;if(isMoon())return moonPlats();if((G&&G.map==='meadow')||(!G&&mapPick==='meadow'))return [];const b=isItemAr()?ITEM_PLATS:isNeon()?NEON_PLATS:isDusk()?DUSK_PLATS:isTaman()?TAMAN_PLATS:isLava()?LAVA_PLATS:isMoon()?MOON_PLATS:PLATS;return isBRW()?brVarPlats(b):b},curSpawns=()=>isBox()?BOX_SPAWNS:isBRW()?brSpawnsFor(curPlats()):((G&&G.map==='meadow')||(!G&&mapPick==='meadow'))?M1_SPAWNS:(isItemAr()?ITEM_SPAWNS:isMoon()?MOON_SPAWNS:(isNeon()||isDusk()||isTaman()||isLava())?NEON_SPAWNS:SPAWNS_FAIR);
 const SPAWNS=[{x:60,y:230},{x:200,y:230},{x:285,y:230},{x:440,y:230},{x:520,y:230},{x:660,y:230},{x:106,y:198},{x:614,y:198},{x:195,y:168},{x:525,y:168},{x:360,y:118},{x:360,y:176}];
 const CLOUDS=[{x:20,y:28,z:3,s:6},{x:170,y:52,z:2,s:9},{x:300,y:20,z:4,s:5},{x:430,y:60,z:2,s:8},{x:560,y:34,z:3,s:7},{x:90,y:86,z:2,s:4},{x:390,y:98,z:2,s:5}];
 const L={};
@@ -4981,9 +5020,13 @@ const NAGA_CEIL=62;/* batas atas terbang NAGA (dulu 118): kepala hampir menyentu
 function physics(e,dt){
   const mn=!!(G&&G.map==='moon');
   if(mn){moonSync();if(e.plat&&e.onG&&e._mt!==G.time){e._mt=G.time;e.x+=e.plat.dx||0;e.y+=e.plat.dy||0}}/* ikut bergerak bersama meteor yang diinjak */
+  if(G&&G.map==='putar'){putarSync();if(e.plat&&e.plat.dy!==undefined&&e.onG&&e._mt!==G.time){e._mt=G.time;e.x+=e.plat.dx||0;e.y+=e.plat.dy||0}}/* ikut naik-turun bersama troli */
   const hw=e.w/2,hh=e.curH*(e.big>1?e.big:1),px=e.x;
   if(G&&G.map==='dusk'&&!e.onG&&G.phase==='fight')e.x+=duskWind(G.time)*dt;if(G&&G.map==='item'&&G.wind&&!e.onG&&G.phase==='fight')e.x+=G.wind*dt;/* ARENA ITEM: angin */ /* TAHAP 7.6: angin Atap Senja menggeser petarung yang di udara */
-  e.x+=e.vx*dt*(mn?MOON_VX:1);fixSolids(e,px);e.x=clamp(e.x,hw,WORLD_W-hw);
+  if(G&&G.map==='putar'&&G.phase==='fight'&&e.onG&&!e.plat&&!e.ws)e.x+=beltV(G.time)*dt;/* ARENA PUTAR: lantai berjalan */
+  e.x+=e.vx*dt*(mn?MOON_VX:1);fixSolids(e,px);
+  if(G&&G.map==='putar'){if(e.x<0)e.x+=WORLD_W;else if(e.x>WORLD_W)e.x-=WORLD_W;if(e.ch)putarBoxHit(e)}/* tembus dinding: keluar kiri = masuk kanan */
+  else e.x=clamp(e.x,hw,WORLD_W-hw);
   if(mn&&(e.onG||e.vy<=0||e._fy===undefined))e._fy=e.y;
   const py=e.y,fd=mn&&!e.onG?Math.max(0,e.y-e._fy):0,ff=mn&&!e.onG&&e.vy>0&&e.ctl&&e.ctl.d&&!e.attack&&e.stun<=0,gk=mn?(ff?MOON_G*2.4:MOON_G*(1+clamp((fd-650)/700,0,1.6))):((G&&G.lg>0)?.45:1);/* ARENA ITEM: gravitasi rendah */ /* jatuh makin panjang = makin dipercepat, agar tidak melayang lama kembali ke bawah */
   e.vy=e.fly?e.vy:Math.min(ff?640:mn?340+clamp((fd-650)*.5,0,260):720,e.vy+GRAV*gk*dt);e.y+=e.vy*dt;if(e.fly&&e.y<NAGA_CEIL){e.y=NAGA_CEIL;if(e.vy<0)e.vy=0}if(!mn&&!e.fly&&!e.ws&&e.y-hh<-6){e.y=hh-6;if(e.vy<0)e.vy=0}e.onG=false;e.plat=null;
@@ -4991,7 +5034,7 @@ function physics(e,dt){
   if(!(G&&isPortId(G.map)))for(const s of curSolids()){if(e.x+hw>s.x&&e.x-hw<s.x+s.w){
     if(e.vy>=0&&py<=s.y+1&&e.y>=s.y){e.y=s.y;e.vy=0;e.onG=true;e.plat=s}
     else if(e.vy<0&&py-hh>=s.y+s.h-1&&e.y-hh<s.y+s.h){e.y=s.y+s.h+hh;e.vy=0}}}
-  const tol=mn?6:1,mg=mn?3:0;
+  const tol=(mn||(G&&G.map==='putar'))?6:1,mg=mn?3:0;
   if(e.dropT<=0&&e.vy>=0)for(const p of ((G&&isPortId(G.map))?PORT_PL:curPlats())){if(e.x+hw+mg>p.x&&e.x-hw-mg<p.x+p.w&&py<=p.y+tol&&e.y>=p.y){e.y=p.y;e.vy=0;e.onG=true;e.plat=p}}
 }
 
@@ -5661,7 +5704,7 @@ class Fighter{
     if(this.stun>0)this.stun-=dt;
     if(this.bgT<=0)this.bgWall=0;
     if(this.bgT>0){this.bgT-=dt;const hw=this.w/2;if(FXL())burst(this.x,this.y-20,2,['#d9b070','#ffffff'],50,.3,40);
-      if((Math.abs(this.vx)>300&&(this.x<=hw+2||this.x>=WORLD_W-hw-2))||this.bgWall){const wl=this.bgWall||Math.sign(this.vx);this.bgWall=0;const by=this.bgBy;this.bgT=0;this.hp=Math.max(0,this.hp-8);this.vx=-wl*90;this.vy=-160;floatText(this.x,this.y-44,'CRASH! -8','#ffcc70');ucBeat(by,this.x,this.y-24,2);starFx(this.x,this.y-24,'#ffffff',18);burst(this.x,this.y-24,22,['#d9b070','#ffcc70','#ffffff'],260,.6,200);G.shake=Math.max(G.shake,10);G.hitStop=Math.max(G.hitStop,.1);sfx('wSlam');if(this.hp<=0){this.state='down';this.downT=999;endRound(by,this,'ko')}}}
+      if(!(G&&G.map==='putar')&&((Math.abs(this.vx)>300&&(this.x<=hw+2||this.x>=WORLD_W-hw-2))||this.bgWall)){const wl=this.bgWall||Math.sign(this.vx);this.bgWall=0;const by=this.bgBy;this.bgT=0;this.hp=Math.max(0,this.hp-8);this.vx=-wl*90;this.vy=-160;floatText(this.x,this.y-44,'CRASH! -8','#ffcc70');ucBeat(by,this.x,this.y-24,2);starFx(this.x,this.y-24,'#ffffff',18);burst(this.x,this.y-24,22,['#d9b070','#ffcc70','#ffffff'],260,.6,200);G.shake=Math.max(G.shake,10);G.hitStop=Math.max(G.hitStop,.1);sfx('wSlam');if(this.hp<=0){this.state='down';this.downT=999;endRound(by,this,'ko')}}}
     if(this.state==='down'&&this.onG){this.downT-=dt;this.vx=app(this.vx,0,900*dt);if(this.downT<=0&&this.hp>0&&!this.fin){this.state='idle';this.inv=.7;this.getT=.42}}
     const c=this.ctl,dir=canAct?((c.r?1:0)-(c.l?1:0)):0;
     const backKey=this.face>0?'l':'r',backHeld=!!c[backKey];
@@ -5974,9 +6017,9 @@ function ai5(f,o,dt){
   const oa=o.attack;
   if(oa&&oa!==A.a5){A.a5=oa;const mv=oa.move,h=mv&&mv.hits&&mv.hits[0];
     if(h&&!h.grab&&!A.rmode&&f.onG&&!f.attack&&f.cd<=0&&dist<95&&dyy<50&&grand()>C.err){
-      if(h.box&&h.box.y>-14&&grand()<.5){f.pressDir('u');A.dx=-toward;A.moveT=.3}/* serangan rendah: lompati */
-      else if(A.dc5<=0&&grand()<P(C.dash)){f.dashT=.2;f.dodgeT=.16;f.inv=Math.max(f.inv,.16);f.vx=-toward*245;A.dc5=1.2;puff(f.x-f.face*8,f.y,4,-f.face)}/* dash menghindar */
-      else if(A.st==='d'&&grand()<P(C.pg))A.rmode='guard'}}/* stance bertahan: guard proaktif */
+      if(h.box&&h.box.y>-14&&G.time-(A.evT||-9)>2.2&&grand()<.5){A.evT=G.time;f.pressDir('u');A.dx=-toward;A.moveT=.3}/* serangan rendah: lompati */
+      else if(A.dc5<=0&&G.time-(A.evT||-9)>2.2&&grand()<P(C.dash)){A.evT=G.time;f.dashT=.2;f.dodgeT=.16;f.inv=Math.max(f.inv,.16);f.vx=-toward*245;A.dc5=2.4;puff(f.x-f.face*8,f.y,4,-f.face)}/* dash menghindar */
+      }}/* stance bertahan: guard proaktif */
   /* rantai combo: setelah pukulan mendarat, lanjutkan serangan berbeda selama jendela combo masih terbuka */
   if(f.comboHits>=1&&f.comboTimer>.15&&!f.attack&&f.cd<=0&&f.stun<=0&&!A.seq&&!(A.c5t>0)&&dist<=52&&dyy<46&&grand()<P(C.chain)){
     A.c5t=.3;
@@ -6039,7 +6082,7 @@ function aiReact(f,o,C,A){
     if(h&&h.grab&&C.punish>.5&&dist<85&&f.onG&&!f.attack&&grand()<.75){f.pressDir('u');A.dx=o.x>f.x?-1:1;A.moveT=.3}/* hindari cengkeraman: lompat mundur */
     else if(h&&!h.grab&&dist<100&&dyy<50&&f.onG&&!f.attack&&f.cd<=0){
       const r=grand();
-      if(r<C.parry+sb)A.rmode='parry';else if(r<C.parry+C.guard+sb*1.5)A.rmode='guard';
+      /* guard/parry sudah dihapus dari game: AI tidak lagi berhenti & mundur menunggu 'blok' */void r;
     }
   }
   if(A.rmode&&oa===A.rid){
@@ -6084,7 +6127,7 @@ function aiDecide(f,o,C){
   if(A.rmode&&o.attack&&o.attack===A.rid)return;
   const dist=Math.abs(o.x-f.x),dy=o.y-f.y,toward=o.x>f.x?1:-1;
   // menghindari serangan
-  if(o.attack&&!f.attack&&dist<80&&grand()<C.dodge){
+  if(o.attack&&!f.attack&&dist<80&&G.time-(A.evT||-9)>2.2&&grand()<C.dodge*.45){A.evT=G.time;/* maks 1 kali menghindar tiap ~2 detik, supaya AI bisa dipukul */
     const h=o.attack.move.hits[0];
     if(h&&h.box.y<-24&&f.onG&&grand()<.6){A.crouch=.45;A.dx=0;return}
     A.dx=-toward;A.moveT=.35;if(f.onG&&grand()<.5)f.pressDir('u');return;
@@ -6149,7 +6192,7 @@ function mirrorCos(base){
 }
 function startMatchCore(id,train,chosenFoe,story){
   selId=id;const foeId=chosenFoe&&CHARS[chosenFoe]?chosenFoe:foeOf(id);foeSelId=foeId;const mine=CHARS[id],mirror=foeId===id,foe=mirror?Object.assign(Object.create(Object.getPrototypeOf(CHARS[foeId])),CHARS[foeId],{name:CHARS[foeId].name+' 2'}):CHARS[foeId];
-  WORLD_W=isPortId(mapPick)?portW(mapPick):mapPick==='moon'?MOON_W:mapPick==='kotak'?BOX_W:mapPick==='item'?ITEM_W:720;if(mapPick==='port')ensurePortLayers(PORT_W);if(mapPick==='portx')ensurePxLayers();if(mapPick==='forest')ensureForestLayers();
+  WORLD_W=isPortId(mapPick)?portW(mapPick):mapPick==='moon'?MOON_W:BXM(mapPick)?BOX_W:mapPick==='item'?ITEM_W:720;if(mapPick==='port')ensurePortLayers(PORT_W);if(mapPick==='portx')ensurePxLayers();if(mapPick==='forest')ensureForestLayers();
   G={sel:id,foeSel:foeId,map:mapPick,crates:isPortId(mapPick)?makePortCrates(portW(mapPick),mapPick==='forest'):[],p:new Fighter(mine,true),e:new Fighter(foe,false),phase:'intro',introT:0,cT:0,cN:-1,fT:0,time:0,timer:60,round:1,score:[0,0],need:2,rtime:60,items:[],proj:[],movers:[],parts:[],shake:0,hitStop:0,cam:0,pop:null,koT:0,itemT:6,rw:null,koWhy:'',confT:0};
   if(mirror){if(lastPick==='me')G.p.co=mirrorCos(COS[id]);else G.e.co=mirrorCos(COS[id])}/* lawan diri sendiri: warna dibedakan */
   if(story){G.story=story;G.sdiff=story.diff}
@@ -6271,8 +6314,8 @@ function camUpdate(dt,snap){
   /* V64 SPLIT-SCREEN: kamera independen per pemain (hanya dipakai render; kamera global g.cam tetap untuk logika/batas arena) */
   {/* V67: kamera tiap strip = ikut karakternya sendiri, sedikit condong ke lawan, zoom otomatis menyesuaikan jarak agar KEDUA petarung tetap terlihat.
       cam1/cam2 = sisi kiri viewport (dunia), z1/z2 = zoom, cy1/cy2 = sisi atas viewport. Zoom maksimum naik seiring tinggi strip (SH). */
-   const Zmax=g.map==='kotak'?1:Math.max(clamp(SH/170,1,1.5),1.5),/* V84-2P: strip landscape pendek -> zoom hingga 1.25x agar karakter lebih besar (tetap otomatis mundur bila kedua petarung berjauhan) */m=36,k=Math.min(1,dt*7),kz=Math.min(1,dt*2.2),ky=Math.min(1,dt*5);/* V85-2P: kamera lebih halus (geser/zoom/vertikal lebih lambat) */
-   const LR=splitLR(),Vw=LR?VW/2:VW,Hs=LR?VH:SH,ZM2=LR?(g.map==='kotak'?1.2:1.8):Zmax,ZN=LR?1.05:1;/* V87: mode kiri-kanan = pandangan hampir kotak (240x270), fokus ke karakter sendiri */
+   const Zmax=BXM(g.map)?1:Math.max(clamp(SH/170,1,1.5),1.5),/* V84-2P: strip landscape pendek -> zoom hingga 1.25x agar karakter lebih besar (tetap otomatis mundur bila kedua petarung berjauhan) */m=36,k=Math.min(1,dt*7),kz=Math.min(1,dt*2.2),ky=Math.min(1,dt*5);/* V85-2P: kamera lebih halus (geser/zoom/vertikal lebih lambat) */
+   const LR=splitLR(),Vw=LR?VW/2:VW,Hs=LR?VH:SH,ZM2=LR?(BXM(g.map)?1.2:1.8):Zmax,ZN=LR?1.05:1;/* V87: mode kiri-kanan = pandangan hampir kotak (240x270), fokus ke karakter sendiri */
    const one=(a,ay,o,key)=>{
      const D=Math.abs(o-a),zt=clamp(Vw/(D+2*m),ZN,ZM2);let z=g['z'+key];z=(snap||z===undefined)?zt:(Math.abs(zt-z)<.04?z:z+(zt-z)*kz);/* zona mati: zoom tidak 'bernapas' karena selisih kecil */
      const W=Vw/z,lo=Math.max(a,o)+m-W/2,hi=Math.min(a,o)-m+W/2;let cx=a+(o-a)*.3;cx=lo<=hi?clamp(cx,lo,hi):(LR?a+clamp((o-a)*.3,-W*.18,W*.18):(a+o)/2);
@@ -6282,7 +6325,7 @@ function camUpdate(dt,snap){
    one(g.p.x,g.p.y,g.e.x,'1');one(g.e.x,g.e.y,g.p.x,'2')}
   /* V2-CLOSECAM v3: KAMERA BATTLE ANTI-PUSING - zoom bertingkat (tidak 'bernapas'), gerak lambat & stabil, tanpa lead.
      Petarung tetap dijamin terlihat lewat batas keras. */
-  if(!g.hc&&g.map!=='moon'&&g.map!=='kotak'&&g.p&&g.e){
+  if(!g.hc&&g.map!=='moon'&&!BXM(g.map)&&g.p&&g.e){
     const a=g.p,b=g.e,ax=a.x-g.cam,bx=b.x-g.cam,MX=70,HEAD=66,FOOT=16,LV=[1,1.2,1.4,1.6];
     const D=Math.abs(ax-bx),top=Math.min(a.y,b.y)-HEAD,bot=Math.max(a.y,b.y)+FOOT;
     const zr=Math.min(VW/(D+2*MX),VH/Math.max(60,bot-top),1.6);/* zoom ideal */
@@ -6304,13 +6347,13 @@ function camUpdate(dt,snap){
       {const lo=bot-H,hi=top;if(lo<=hi)g.bzT=clamp(g.bzT,lo,hi);}
       g.bzL=clamp(g.bzL,0,VW-W);g.bzT=clamp(g.bzT,0,VH-H)}
   }else g.bz=1;
-  for(const f of [g.p,g.e]){if(f.x<g.cam+10){f.x=g.cam+10;if(f.vx<0){if(f.bgT>0&&f.vx<-300)f.bgWall=-1;f.vx=0}}else if(f.x>g.cam+VW-10){f.x=g.cam+VW-10;if(f.vx>0){if(f.bgT>0&&f.vx>300)f.bgWall=1;f.vx=0}}}
+  if(g.map!=='putar')for(const f of [g.p,g.e]){if(f.x<g.cam+10){f.x=g.cam+10;if(f.vx<0){if(f.bgT>0&&f.vx<-300)f.bgWall=-1;f.vx=0}}else if(f.x>g.cam+VW-10){f.x=g.cam+VW-10;if(f.vx>0){if(f.bgT>0&&f.vx>300)f.bgWall=1;f.vx=0}}}
 }
 function separate(a,b){if(a.gb||b.gb||a.hold>0||b.hold>0)return;
   const ox=(a.w+b.w)/2-Math.abs(a.x-b.x);if(ox<=0)return;
   if(a.y<=b.y-b.curH*(b.big>1?b.big:1)+3||b.y<=a.y-a.curH*(a.big>1?a.big:1)+3)return;
   const d=a.x<b.x?-1:a.x>b.x?1:(a.face>0?-1:1);
-  a.x+=d*ox/2;b.x-=d*ox/2;a.x=clamp(a.x,a.w/2,WORLD_W-a.w/2);b.x=clamp(b.x,b.w/2,WORLD_W-b.w/2);fixSolids(a);fixSolids(b);
+  a.x+=d*ox/2;b.x-=d*ox/2;if(!(G&&G.map==='putar')){a.x=clamp(a.x,a.w/2,WORLD_W-a.w/2);b.x=clamp(b.x,b.w/2,WORLD_W-b.w/2)}fixSolids(a);fixSolids(b);
 }
 /* ITEM T3: semua angka spawn adil / pengejar ketinggalan / jeda ada di sini (1v1 saja; BR tidak memakai) */
 const ITEM_CFG={dmgMul:1.3,dmgDur:8,frzDur:5,frzSlow:.45,/* ITEM T6: damage ganda & beku (1v1) */ultFill:70,/* ITEM T4: meter ULT dari item ulti di 1v1 (BR tetap 100) */rarOf:{regen:0,rage:1,swap:1,bomb:1,zap:2,ghost:2,heal:0,speed:0,spring:0,vamp:1,poison:1,dmg:1,frz:1,copy:2,rand:2},/* 0 biasa,1 langka,2 epik */rarW:[1,.8,.35],/* pengali bobot spawn per tingkat (1v1) */rarCol:[[255,255,160],[90,190,255],[255,90,255]],gapMin:9,gapMax:15,/* jeda antar item (detik) */
@@ -6406,7 +6449,7 @@ function zoomTick(g,dt){
   v.L.fade=.35*v.k;
 }
 function zoomXform(c,g){
-  if(g.map==='kotak')return;/* ARENA KOTAK: kamera tidak pernah zoom, semua arena selalu terlihat */
+  if(BXM(g.map))return;/* ARENA KOTAK: kamera tidak pernah zoom, semua arena selalu terlihat */
   const v=g.vz,u=g.uc;let k,Z,px,py,dyf;
   if(v&&v.k>=.001){k=v.k;Z=ZM.Z;px=v.px;py=v.py;dyf=ZM.dy}
   else if(u&&u.k>=.001){/* V59: kamera sinematik Ultimate (zoom + orbit/roll/shear + bingkai aman) */
@@ -6715,7 +6758,7 @@ function update(dtIn){
   roStep(g);if(g.hc)hcSep(g);else separate(g.p,g.e);updMovers(g,dt);updOrs(g,dt);
   // proyektil
   for(let i=g.proj.length-1;i>=0;i--){
-    const pr=g.proj[i];pr.x+=pr.vx*dt;pr.y+=(pr.vy||0)*dt;pr.t+=dt;const tg=hsTgt(projTg(pr,g));let dead=pr.t>pr.life||pr.x<0||pr.x>WORLD_W;
+    const pr=g.proj[i];pr.x+=pr.vx*dt;pr.y+=(pr.vy||0)*dt;pr.t+=dt;const tg=hsTgt(projTg(pr,g));const _pw=G&&G.map==='putar';if(_pw){if(pr.x<0)pr.x+=WORLD_W;else if(pr.x>WORLD_W)pr.x-=WORLD_W}let dead=pr.t>pr.life||(!_pw&&(pr.x<0||pr.x>WORLD_W));
     if(pr.ball){pr.vy=(pr.vy||0)+900*dt;const gy=FLOOR-(pr.big?18:(pr.rad||6));pr.rot=(pr.rot||0)+pr.vx*dt*.25;
       if(pr.y>=gy&&pr.vy>0){pr.y=gy;if(pr.vy>80){pr.vy=-pr.vy*(pr.rest||.7);pr.vx*=(pr.vxf||.84);pr.bn++;if(pr.big){G.shake=Math.max(G.shake,4);fWave(pr.x,FLOOR,30,'#ffffff')}burst(pr.x,FLOOR-2,3,['#ffffff','#b8a070'],60,.2,20);sfx('click')}else{pr.vy=0;pr.vx*=Math.max(0,1-dt*3)}}
       if(pr.y>=gy&&Math.abs(pr.vx)<30)dead=true}
@@ -7654,14 +7697,15 @@ const MAP_LIST=[
  {id:'portx',name:'PELABUHAN RAYA',desc:'DERMAGA MALAM 7600PX: LAUT, KAPAL KARGO, MERCUSUAR, TIANG LAMPU'},
  {id:'moon',name:'PERMUKAAN BULAN',desc:'GRAVITASI RENDAH, METEOR BERGERAK, DUNIA LEBAR & MENJULANG TANPA BATAS KE ATAS'},
  {id:'item',name:'ARENA ITEM',desc:'DUNIA PESTA 1800PX TANPA PIJAKAN: 6 BALON (KADANG EMAS) YANG MENGEJAR MUSUH, HUJAN ITEM TIAP 30 DTK, GRAVITASI RENDAH & ANGIN ACAK & MENJATUHKAN ITEM, ITEM TURUN TIAP ±3 DETIK (MAKS 6 SEKALIGUS)'},
- {id:'kotak',name:'ARENA KOTAK',desc:'KOTAK TERTUTUP 1 LAYAR: KAMERA MELIHAT SEMUA, DINDING & PLAFON, BOX TANGGA DAN PIJAKAN UNTUK NAIK-TURUN'}];
+ {id:'kotak',name:'ARENA KOTAK',desc:'KOTAK TERTUTUP 1 LAYAR: KAMERA MELIHAT SEMUA, DINDING & PLAFON, BOX TANGGA DAN PIJAKAN UNTUK NAIK-TURUN'},
+ {id:'putar',name:'ARENA PUTAR',desc:'LANTAI BERJALAN BOLAK-BALIK, TEMBUS DINDING KIRI-KANAN, TROLI NAIK-TURUN DI KIRI & KANAN, DIDORONG KE DINDING = MUNCUL DI SISI LAWAN'}];
 function drawMapCards(){
   const keep=mapPick,m=mapPick,cv=$('mapPv-cur');if(!cv)return;MOON_CY=0;MOON_Z=1;MOON_Z=1;
   try{
     const c=cv.getContext('2d');c.imageSmoothingEnabled=false;
     if(isPortId(m)){/* pratinjau pelabuhan: pastikan layer & pijakan sesuai lebar; RNG bersama dipulihkan agar sinkron multiplayer tidak terganggu */
       if(m==='portx')ensurePxLayers();else ensurePortLayers(PORT_W);if(PORT_PLW!==portW(m)){const rs=RNG_STATE,ps=PORT_SEED,oc=PORT_PL;seedRng(77);makePortCrates(portW(m));RNG_STATE=rs;PORT_SEED=ps}}
-    const cam=isPortId(m)?portW(m)/2-VW/2:m==='moon'?1200-VW/2:m==='kotak'?0:m==='item'?ITEM_W/2-VW/2:120,ax=startX(true)-cam,bx=startX(false)-cam;
+    const cam=isPortId(m)?portW(m)/2-VW/2:m==='moon'?1200-VW/2:BXM(m)?0:m==='item'?ITEM_W/2-VW/2:120,ax=startX(true)-cam,bx=startX(false)-cam;
     drawArena(c,cam,menuT);
     if(isPortId(m)&&PORT_PL.length){c.save();c.translate(-Math.round(cam),0);for(const p of PORT_PL){if(p.x>cam+VW+130||p.x+p.w<cam-10)continue;drawPortPlat(c,p,menuT)}c.restore()}
     drawShadow(c,ax,FLOOR,FLOOR);drawShadow(c,bx,FLOOR,FLOOR);
@@ -9381,7 +9425,7 @@ function hcStart(){
   else{for(const id of al)fs.push(mk(id,0));for(let i=1;i<F.e;i++)fs.push(mk(en[i],1))}
   {const cnt={};for(const f of fs){const id=f.ch.id;f.co=COS[id];const n=cnt[id]||0;cnt[id]=n+1;if(n){let co=COS[id];for(let q=0;q<n;q++)co=mirrorCos(co);f.co=co}}}/* karakter kembar: warna dibedakan */
   if(F.k==='giant')for(const f of fs){f.w0=f.w;f.big=1;f.w=f.w0;f.out=false}/* V106: BUTO VS BUTO - awal ukuran NORMAL; membesar (GIANT_K) hanya saat AMUK lalu mengecil lagi */
-  g.hc={k:F.k,fs,brClock:0,brDamageT:0,brLeft:0,brRight:brWd(g),brStart:F.k==='br'?BR_ZONE[brCfg.z].s:20,brDuration:F.k==='br'?BR_ZONE[brCfg.z].d:150,dropMul:BR_DROP[brCfg.d].m,brMinWidth:(g.map==='kotak'?160:420),brShrinkMul:1,brFeed:[],brAlive:fs.map(()=>true),brLastAlive:fs.length,tw:F.k==='3v3'?1:0};g.sdiff=S.diff==='HARD'?'HARD':'NORMAL';g.baby=false;g.need=F.k==='giant'?GIANT_NEED:1;g.rtime=0;g.timer=Infinity;
+  g.hc={k:F.k,fs,brClock:0,brDamageT:0,brLeft:0,brRight:brWd(g),brStart:F.k==='br'?BR_ZONE[brCfg.z].s:20,brDuration:F.k==='br'?BR_ZONE[brCfg.z].d:150,dropMul:BR_DROP[brCfg.d].m,brMinWidth:(BXM(g.map)?160:420),brShrinkMul:1,brFeed:[],brAlive:fs.map(()=>true),brLastAlive:fs.length,tw:F.k==='3v3'?1:0};g.sdiff=S.diff==='HARD'?'HARD':'NORMAL';g.baby=false;g.need=F.k==='giant'?GIANT_NEED:1;g.rtime=0;g.timer=Infinity;
   if(F.k==='br')WORLD_W=brWd(g);
   newRound();if(F.k==='br')for(const f of fs)f.bd=1/BR_TUF[brCfg.t].m;/* V90: BR lebih tahan damage (default 1.5x lebih awet) */
   if(F.k==='2v2'){
@@ -9542,7 +9586,7 @@ const BR_RARITY={of:{heal:0,speed:0,spring:0,trap:0,vamp:1,poison:1,shield:1,mag
 const brRarK=g=>{const h=g.hc;return clamp((brWd(g)-(h.brRight-h.brLeft))/(brWd(g)-h.brMinWidth),0,1)};/* 0 = zona penuh, 1 = zona terkecil */
 const brRarMul=(t,k)=>1+(BR_RARITY.mul[BR_RARITY.of[t]||0]-1)*k;
 const BR_LOOT={pool:['heal','vamp','spring','poison','speed','shield','trap','magnet','revive'],w:[.26,.2,.18,.16,.13,.12,.1,.1,.07],life:18};/* B2: loot petarung KO = 1 item dari pool BR, bukan ulti (copy/rand) */
-const brItemCap=g=>{const h=g.hc,z=clamp((h.brRight-h.brLeft)/brWd(g),0,1);return g.map==='kotak'?Math.max(3,Math.round(7*z)):Math.max(6,Math.round(24*Math.sqrt(z)))};/* batas item di arena (dipakai spawn & loot) */
+const brItemCap=g=>{const h=g.hc,z=clamp((h.brRight-h.brLeft)/brWd(g),0,1);return BXM(g.map)?Math.max(3,Math.round(7*z)):Math.max(6,Math.round(24*Math.sqrt(z)))};/* batas item di arena (dipakai spawn & loot) */
 function brLootDrop(g,f){
   const h=g.hc;if(!h||h.k!=='br'||f.zoneKO||f.x<h.brLeft||f.x>h.brRight)return;/* tereliminasi zona / mati di luar zona: tanpa loot */
   const L=BR_LOOT,rk=brRarK(g),lw=L.pool.map((t,i)=>L.w[i]*brRarMul(t,rk));let r=grand()*lw.reduce((a,b)=>a+b,0),j=0;for(;j<L.pool.length-1;j++){r-=lw[j];if(r<=0)break}
@@ -9648,12 +9692,12 @@ const _goAuto=go;go=function(s){if(autoShopEl&&s!=='play')autoShopEl.style.displ
   if(s==='play'&&G&&G.autoMp&&G.phase==='shop'&&!G.mpOver)setTimeout(()=>{const g=G;if(state==='play'&&g&&g.autoMp&&g.phase==='shop'&&g.autoShop)(g.autoShop.gDone?autoShopShow():autoGachaShow(g))},0);/* toko muncul lagi setelah pause */
   return r};
 function hcPlace(g){
-  const H=g.hc,mid=(isPortId(g.map)||g.map==='kotak')?WORLD_W/2:360,fs=H.fs;g.drops=null;H.dropT=undefined;H.brAnn=null;H.brAlive=fs.map(()=>true);H.brLastAlive=fs.length;g.hcGo=0;if(H.k==='br'){H.brClock=0;H.brDamageT=0;H.brLeft=0;H.brRight=WORLD_W;g.hcRank=0;}
+  const H=g.hc,mid=(isPortId(g.map)||BXM(g.map))?WORLD_W/2:360,fs=H.fs;g.drops=null;H.dropT=undefined;H.brAnn=null;H.brAlive=fs.map(()=>true);H.brLastAlive=fs.length;g.hcGo=0;if(H.k==='br'){H.brClock=0;H.brDamageT=0;H.brLeft=0;H.brRight=WORLD_W;g.hcRank=0;}
   for(const f of fs)if(f!==g.p&&f!==g.e)for(const k of ['spd','pow','dm','bd','bo','bu'])if(g.e[k]!==undefined)f[k]=g.e[k];
   if(g.vs2){const C_=AI_CFG[g.sdiff||'NORMAL'];for(const f of fs)if(f!==g.p&&f!==g.e){f.spd=C_.spd;f.pow=C_.pow;f.dm=C_.dm}}
   if(H.k==='br'){const o=(g.vs2?shufG:shuf)(fs.slice()),n=o.length,bx=WORLD_W<1000,span=bx?WORLD_W-168:WORLD_W-500;o.forEach((f,i)=>{const jitter=Math.sin((i+1)*12.9898)*(bx?8:72),x=bx?clamp(84+i*span/(n-1)+jitter,78,WORLD_W-78):clamp(250+i*span/(n-1)+jitter,180,WORLD_W-180);f.reset(x,x<WORLD_W/2?1:-1);f.ult=0})}
   else if(H.tw){twPlace(g);const sp=g.sdiff==='HARD'?1:.93,pw=g.sdiff==='HARD'?1.08:1;for(const f of fs)if(f!==g.p){f.spd=sp;f.pow=pw;f.dm=1}/* TOWER: AI sedikit lebih lambat dari pemain yang berlari (NORMAL .93x, HARD 1x) */}
-  else{let a=0,b=0;const bxm=g.map==='kotak',nA=fs.filter(f=>f.team===0).length,mx=Math.max(nA,fs.length-nA),ln=i=>mx>1?104+i*(272/(mx-1)):mid;for(const f of (g.autoShop?fs.slice().sort((x,y)=>(x.fm||0)-(y.fm||0)):fs)){if(f.team===0)f.reset(bxm?ln(a++)-24:mid-110-(a++)*44,1);else f.reset(bxm?ln(b++)+24:mid+110+(b++)*44,-1);f.ult=0}}
+  else{let a=0,b=0;const bxm=BXM(g.map),nA=fs.filter(f=>f.team===0).length,mx=Math.max(nA,fs.length-nA),ln=i=>mx>1?104+i*(272/(mx-1)):mid;for(const f of (g.autoShop?fs.slice().sort((x,y)=>(x.fm||0)-(y.fm||0)):fs)){if(f.team===0)f.reset(bxm?ln(a++)-24:mid-110-(a++)*44,1);else f.reset(bxm?ln(b++)+24:mid+110+(b++)*44,-1);f.ult=0}}
   for(const f of fs){f.tg=null;f.tgT=-9;f.clone=null;f.clone2=null;f.hold=0;f.zoneKO=0;f.slot=null}
   H.spec=null;g.brOwn=0;
 }
@@ -9666,7 +9710,7 @@ const _cuHc=camUpdate;camUpdate=function(dt,snap){
   const brMe=g.hc.k==='br'&&me===P0,dxo=me&&o?o.x-me.x:0;
   const focus=(g.hc.k==='br'||g.hc.tw)&&me?me.x:me&&o?(brMe?me.x+(Math.abs(dxo)<260?clamp(dxo,-60,60)*.25:0):me.x*.52+o.x*.48):(me?me.x:VW/2);/* V76: BR = pemain di tengah layar */
   const tgt=clamp(focus-VW/2,0,WORLD_W-VW);g.cam=snap?tgt:g.cam+(tgt-g.cam)*Math.min(1,dt*(g.hc.k==='br'?10:7));
-  for(const f of g.hc.fs)f.x=clamp(f.x,10,WORLD_W-10);
+  if(g.map!=='putar')for(const f of g.hc.fs)f.x=clamp(f.x,10,WORLD_W-10);/* arena putar: tidak ada batas, tembus dinding */
   if(g.hc.k==='br'&&!snap)brShakeClamp(g,dt);
 };
 
@@ -9885,7 +9929,7 @@ function netHcBuild(cfg){
   if(br)cfg.en.forEach((id,i)=>{if(CHARS[id])fs.push(mk(id,2+i))});
   else{cfg.al.forEach(id=>{if(CHARS[id])fs.push(mk(id,0))});cfg.en.forEach(id=>{if(CHARS[id])fs.push(mk(id,1))})}
   {const cnt={};for(const f of fs){const id=f.ch.id;f.co=COS[id];const n=cnt[id]||0;cnt[id]=n+1;if(n){let co=COS[id];for(let q=0;q<n;q++)co=mirrorCos(co);f.co=co}}}
-  g.hc={k:cfg.k,fs,brClock:0,brDamageT:0,brLeft:0,brRight:brWd(g),brStart:br?cfg.bs:20,brDuration:br?cfg.bd:150,dropMul:cfg.dm||1,brMinWidth:(g.map==='kotak'?160:420),brShrinkMul:1,brFeed:[],brAlive:fs.map(()=>true),brLastAlive:fs.length};
+  g.hc={k:cfg.k,fs,brClock:0,brDamageT:0,brLeft:0,brRight:brWd(g),brStart:br?cfg.bs:20,brDuration:br?cfg.bd:150,dropMul:cfg.dm||1,brMinWidth:(BXM(g.map)?160:420),brShrinkMul:1,brFeed:[],brAlive:fs.map(()=>true),brLastAlive:fs.length};
   g.sdiff=cfg.hard?'HARD':'NORMAL';g.baby=false;g.need=1;g.rtime=0;g.timer=Infinity;g.hcCfg=cfg;
   if(br)WORLD_W=brWd(g);
   newRound();if(br)for(const f of fs)f.bd=1/(cfg.tf||1);
@@ -10668,6 +10712,13 @@ function autoGachaShow(g){
   const roll=()=>{let n=0,dl=60;const step=()=>{n++;if(n<16){render(ids[Math.floor(Math.random()*ids.length)],1);sfx('click');dl+=n*2;setTimeout(step,dl)}else{render(me,2);sfx('item')}};step()};
   render(null,0)}
 {const _g3=go;go=function(sc){if(sc!=='play'){const e=document.getElementById('autoGacha');if(e)e.style.display='none'}return _g3.apply(this,arguments)}}
+/* ARENA PUTAR: hero yang berada di tepi digambar juga di sisi seberang (efek tembus dinding) */
+{const _fd=Fighter.prototype.draw;Fighter.prototype.draw=function(c){_fd.call(this,c);
+  if(G&&G.map==='putar'&&!this._gh){const ox=this.x,sh=ox<28?WORLD_W:ox>WORLD_W-28?-WORLD_W:0;
+    if(sh){/* FIX garis putih: jejak pukulan (sw) & bayangan dash (gh) pakai larik SENDIRI untuk gambar bayangan, supaya tidak tersambung dari posisi asli ke posisi bayangan (selisih lebar arena) */
+      const sw=this.sw,gh=this.gh,gT=this.gT;this.sw=this._gSw||(this._gSw=[]);this.gh=this._gGh||(this._gGh=[]);
+      this._gh=1;this.x=ox+sh;try{_fd.call(this,c)}finally{this.x=ox;this._gh=0;this.sw=sw;this.gh=gh;this.gT=gT}}
+    else if(this._gSw){this._gSw.length=0;this._gGh.length=0}}}}
 /* PILIH MUSUH (single player): sebelum gacha pemain memilih WALUYO (Lv.1, setelah bos kalah lanjut Lv.2 WEBOY) atau langsung WEBOY (Lv.2: lebih kuat, bos akhir WEBOY raksasa) */
 {const _gF=autoGachaShow;autoGachaShow=function(g){
   const st=g&&g.autoShop;
@@ -10678,14 +10729,19 @@ function autoGachaShow(g){
   el.style.display='flex';document.body.classList.add('auto2v2');
   const card=(id,nm,tag,desc,col)=>'<button data-foe="'+id+'" style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6vmin;padding:1.2vmin;color:#fff;font-family:inherit;cursor:pointer;border:3px solid '+col+';border-radius:14px;background:radial-gradient(circle at 50% 70%,rgba(120,170,255,.35),rgba(0,0,0,.55) 75%)">'
     +autoPorImg(id,'as-gp')+'<h2 style="margin:0;font-size:1.6em">'+nm+'</h2><b style="color:'+col+'">'+tag+'</b><div style="font-size:.8em;opacity:.9;line-height:1.3">'+desc+'</div></button>';
-  el.innerHTML='<div class="as-pn ag"><div class="as-hd"><div class="as-ttl">PILIH MUSUH</div></div>'
+  const arBtn=(id,nm,on)=>'<button data-arena="'+id+'" style="flex:1;font-family:inherit;font-weight:800;padding:.5em .4em;border-radius:10px;color:#fff;cursor:pointer;border:3px solid '+(on?'#ffd040':'#444a70')+';background:'+(on?'#7a5a10':'#1c2146')+'">'+nm+'</button>';
+  let arena='putar';
+  el.innerHTML='<div class="as-pn ag"><div class="as-hd"><div class="as-ttl">PILIH MUSUH &amp; ARENA</div></div>'
+    +'<div style="display:flex;gap:1.5vmin;align-items:center;padding:.8vmin 1vmin;font-weight:800"><span>ARENA:</span>'
+    +arBtn('putar','PUTAR · lantai jalan, tembus dinding, troli',true)+arBtn('kotak','KOTAK · ada peti',false)+'</div>'
     +'<div class="ag-body" style="gap:2vmin;overflow:auto">'
     +card('waluyo','WALUYO','LEVEL 1 · NORMAL','Stage 1-7 lawan Waluyo, ronde 8 BOS WALUYO RAKSASA. Setelah menang lanjut LEVEL 2 melawan Weboy.','#8abaff')
     +card('spiderman','WEBOY','LEVEL 2 · SULIT','Langsung lawan Weboy: musuh +30% lebih kuat, ronde 8 BOS WEBOY RAKSASA + pasukan ANAK JARING.','#ff7a6a')
     +'</div></div>';
+  el.querySelectorAll('[data-arena]').forEach(b=>b.onclick=()=>{arena=b.dataset.arena;sfx('click');el.querySelectorAll('[data-arena]').forEach(x=>{const on=x.dataset.arena===arena;x.style.borderColor=on?'#ffd040':'#444a70';x.style.background=on?'#7a5a10':'#1c2146'})});
   el.querySelectorAll('[data-foe]').forEach(b=>b.onclick=()=>{
-    const w=b.dataset.foe==='spiderman';st.level=w?2:1;st.foePicked=true;el.style.display='none';sfx('click');
-    toast(w?'MUSUH: WEBOY (LEVEL 2)':'MUSUH: WALUYO (LEVEL 1)');
+    const w=b.dataset.foe==='spiderman';st.level=w?2:1;st.foePicked=true;g.map=arena;g.hid=null;g.ibx=null;el.style.display='none';sfx('click');
+    toast((w?'MUSUH: WEBOY (LEVEL 2)':'MUSUH: WALUYO (LEVEL 1)')+' · ARENA '+(arena==='putar'?'PUTAR':'KOTAK'));
     _gF.apply(self,args)})
 }}
 {const _g4=go;go=function(sc){if(sc!=='play'){const e=document.getElementById('autoFoePick');if(e)e.style.display='none'}return _g4.apply(this,arguments)}}
@@ -11107,11 +11163,11 @@ function autoSpRegacha(g){
    (aktif lagi tiap ronde), jadi pemain bisa menyusun posisi awal. Tata letak diundi SEKALI per pertandingan memakai grand()
    (deterministik di multiplayer: dipanggil di titik sinkron yang sama di kedua HP). */
 const AUTO_HID_T=[['heal',3,'HEAL +30%'],['shield',2,'PERISAI'],['dmg',2,'DAMAGE x2'],['vamp',1,'VAMPIR'],['speed',2,'SPEED UP'],['ult5',2,'ULTI +50'],['sword',1,'PEDANG'],['gun',1,'PISTOL'],['disc',1,'CAKRAM']];
-const AUTO_HID_Z=[[14,44,230],[84,156,150],[340,396,150],[436,466,230]];/* zona rahasia (lingkaran merah): atas peti kiri, platform kiri, platform kanan, atas peti kanan */
+const AUTO_HID_Z=[[6,26,166],[84,156,150],[340,396,150],[454,474,166]];/* zona rahasia (lingkaran merah): atas peti kiri, platform kiri, platform kanan, atas peti kanan */
 function autoHidInit(g){
   const tw=AUTO_HID_T.reduce((a,x)=>a+x[1],0),out=[];
   const pick=()=>{let r=grand()*tw,t=AUTO_HID_T[0];for(const x of AUTO_HID_T){if(r<x[1]){t=x;break}r-=x[1]}return t};
-  if(isBox()){for(const z of AUTO_HID_Z){const x=Math.round(z[0]+grand()*(z[1]-z[0])),t=pick();out.push({x,y:z[2],t:t[0],n:t[2],used:false,known:false})}}
+  if(isBox()){for(const z of (isPutar()?[]:AUTO_HID_Z)){const x=Math.round(z[0]+grand()*(z[1]-z[0])),t=pick();out.push({x,y:z[2],t:t[0],n:t[2],used:false,known:false})}}
   else{for(let i=0;i<4;i++){const p=autoSnap2(24+grand()*(WORLD_W-48),grand()>.5?FLOOR:60+grand()*150),t=pick();out.push({x:p.x,y:p.y,t:t[0],n:t[2],used:false,known:false})}}
   g.hid=out}
 function autoHidReset(g){if(!g.hid)autoHidInit(g);for(const it of g.hid)it.used=false}
