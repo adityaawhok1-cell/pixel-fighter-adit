@@ -1052,7 +1052,7 @@ function putarBoxHit(e){const g=G;if(!g||g.map!=='putar'||g.phase!=='fight'||e.h
     else if(t[0]==='ult5'){e.ult=Math.min(100,(e.ult||0)+50);floatText(e.x,e.y-44,'ULTI +50','#ff7aff');sfx('item')}
     else autoMpApplyItem(e,t[0]);
     burst(b.x,b.y-8,14,['#ffd040','#ffffff','#b07a30'],140,.5,80);floatText(b.x,b.y-26,'KOTAK PECAH!','#ffe070');sfx('item');break}}
-const PORT_W=3800,BR_W=7600,BOX_W=480,ITEM_W=1800,VW=480,VH=270,FLOOR=230,GRAV=1000,WIN=.26;let WORLD_W=720;const isPortId=m=>m==='port'||m==='portx'||m==='forest',portW=m=>m==='portx'?BR_W:PORT_W;let PORT_LW=0,PORT_PLW=0;/* V74: map PELABUHAN RAYA (portx) = pelabuhan 7600px untuk duel biasa */function syncWorld(){WORLD_W=BXM((G?G.map:mapPick))?BOX_W:G&&G.hc&&G.hc.k==='br'?BR_W:isPortId(G?G.map:mapPick)?portW(G?G.map:mapPick):(G?G.map:mapPick)==='moon'?MOON_W:(G?G.map:mapPick)==='item'?ITEM_W:720}function startX(isP){const m=isPortId(mapPick)?portW(mapPick)/2:mapPick==='moon'?1200:BXM(mapPick)?BOX_W/2:mapPick==='item'?ITEM_W/2:360;return isP?m-110:m+110}
+const PORT_W=3800,BR_W=7600,BOX_W=480,ITEM_W=1800,VH=270,FLOOR=230,GRAV=1000,WIN=.26;let VW=480;/* VW sementara diperlebar saat kamera luas menggambar dunia */let WORLD_W=720;const isPortId=m=>m==='port'||m==='portx'||m==='forest',portW=m=>m==='portx'?BR_W:PORT_W;let PORT_LW=0,PORT_PLW=0;/* V74: map PELABUHAN RAYA (portx) = pelabuhan 7600px untuk duel biasa */function syncWorld(){WORLD_W=BXM((G?G.map:mapPick))?BOX_W:G&&G.hc&&G.hc.k==='br'?BR_W:isPortId(G?G.map:mapPick)?portW(G?G.map:mapPick):(G?G.map:mapPick)==='moon'?MOON_W:(G?G.map:mapPick)==='item'?ITEM_W:720}function startX(isP){const m=isPortId(mapPick)?portW(mapPick)/2:mapPick==='moon'?1200:BXM(mapPick)?BOX_W/2:mapPick==='item'?ITEM_W/2:360;return isP?m-110:m+110}
 /* kecepatan parallax tiap lapisan (1 = sama dengan tanah/kamera) */
 const SPAN=WORLD_W-VW,PX={sky:.05,cloud:.1,far:.3,hill:.45,mid:.6,fg:1.35};
 /* V8: sinematik kemenangan (detik nyata): jeda -> zoom ke pemenang -> jeda napas -> teks -> (ronde biasa) zoom keluar */
@@ -1077,10 +1077,10 @@ ctx.imageSmoothingEnabled=false;
 
 /* ---------- penyimpanan ---------- */
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},_w:0,set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){const n=Date.now();if(n-LS._w>4000){LS._w=n;try{if(typeof toast==='function')toast('GAGAL MENYIMPAN: PENYIMPANAN PENUH/DIBLOKIR')}catch(e2){}}return false}}};
-const DEF_SET={musicOn:true,sfxOn:true,musicVol:.5,sfxVol:.7,diff:'EASY',wins:2,rtime:60,speed:1,ctrlSize:1,ctrlOpa:.75,ctrlKof:true,orient:true,lr2pb:false,fx:'FULL'};
+const DEF_SET={musicOn:true,sfxOn:true,musicVol:.5,sfxVol:.7,diff:'EASY',wins:2,rtime:60,speed:1,ctrlSize:1,ctrlOpa:.75,ctrlKof:true,orient:true,lr2pb:false,wideCam:true,fx:'FULL'};
 const S=Object.assign({},DEF_SET,LS.get('pf_settings_v1',{}));
 (function sanitize(){
-  S.musicOn=!!S.musicOn;S.sfxOn=!!S.sfxOn;S.ctrlKof=S.ctrlKof!==false;S.orient=!!S.orient;S.lr2pb=S.lr2pb===true;
+  S.musicOn=!!S.musicOn;S.sfxOn=!!S.sfxOn;S.ctrlKof=S.ctrlKof!==false;S.orient=!!S.orient;S.lr2pb=S.lr2pb===true;S.wideCam=S.wideCam!==false;
   S.musicVol=clamp(+S.musicVol||0,0,1);S.sfxVol=clamp(+S.sfxVol||0,0,1);
   S.speed=clamp(+S.speed||1,.7,1.4);S.ctrlSize=clamp(+S.ctrlSize||1,.7,1.5);S.ctrlOpa=clamp(+S.ctrlOpa||.75,.2,1);
   if(!['BABY','EASY','NORMAL','HARD'].includes(S.diff))S.diff='EASY';
@@ -1092,18 +1092,45 @@ const S=Object.assign({},DEF_SET,LS.get('pf_settings_v1',{}));
    Palet, baju, topi, aksesori, CHARS (Adit, Waluyo, Spider-Man, Boge), tabel lawan
    ===================================================================== */
 const PAL=['#f4f4f4','#d8d8e8','#e23b3b','#f08030','#f2c230','#8ad04a','#2d9d4c','#30c0d0','#2f6fe4','#6a4cd8','#d058c8','#ff8aa8','#8a5a30','#8a8a9a','#3a3a52','#14141e'];
-const ACC=['TANPA','HEADBAND','CAP','KACAMATA','SCARF','STAR BADGE'];
+const ACC=['TANPA','HEADBAND','CAP','KACAMATA','SCARF','STAR BADGE','MASKER','KALUNG EMAS','JUBAH','PENUTUP MATA','HEADSET','TAS PUNGGUNG','SAYAP MINI'];
 const OUTFITS=[
- {name:'KAOS PUTIH',shirt:'#f4f4f4',shorts:'#2f6fe4',accent:'#d8d8e8',desc:'Kaos putih polos, celana biru.'},
- {name:'KAOS KUNING',shirt:'#f2c230',shorts:'#e23b3b',accent:'#c99a10',desc:'Kaos kuning polos, celana merah.'},
- {name:'KAOS HITAM',shirt:'#292936',shorts:'#3a4468',accent:'#55556d',desc:'Kaos hitam polos, celana biru tua.'},
- {name:'KAOS PINK',shirt:'#ff7ab8',shorts:'#3a2a7a',accent:'#ffb0d6',desc:'Kaos pink cerah, celana ungu tua.'},
- {name:'KAOS MERAH',shirt:'#d8322e',shorts:'#23233a',accent:'#ff8a80',desc:'Kaos merah menyala, celana navy.'},
- {name:'KAOS UNGU',shirt:'#8a4fd8',shorts:'#1f2a44',accent:'#c9a0ff',desc:'Kaos ungu, celana biru malam.'},
+ {name:'T-SHIRT PUTIH',shirt:'#f4f4f4',shorts:'#2f6fe4',accent:'#d8d8e8',desc:'Kaos lengan pendek, leher bulat, celana biru.'},
+ {name:'SINGLET KUNING',shirt:'#f2c230',shorts:'#e23b3b',accent:'#c99a10',desc:'Singlet tanpa lengan, celana merah.'},
+ {name:'HOODIE HITAM',shirt:'#292936',shorts:'#3a4468',accent:'#55556d',desc:'Hoodie lengan panjang, tudung, kantong, celana biru tua.'},
+ {name:'LENGAN PANJANG PINK',shirt:'#ff7ab8',shorts:'#3a2a7a',accent:'#ffb0d6',desc:'Kaos lengan panjang pink, celana ungu tua.'},
+ {name:'JAKET MERAH',shirt:'#d8322e',shorts:'#23233a',accent:'#ff8a80',desc:'Jaket lengan panjang, kerah tinggi, resleting, celana navy.'},
+ {name:'ROMPI UNGU',shirt:'#8a4fd8',shorts:'#1f2a44',accent:'#c9a0ff',desc:'Rompi terbuka tanpa lengan, dada terlihat, celana biru malam.'},
  {name:'SUIT WEBBOY',shirt:'#1d3a8a',shorts:'#c81e2c',accent:'#e0222f',desc:'Singlet biru royal, boxer merah, topeng merah bergaris jaring.'},
  {name:'SUIT BAYANGAN',shirt:'#22222e',shorts:'#2b2b3d',accent:'#e0222f',desc:'Serba hitam, topeng hitam, lambang merah.'},
- {name:'SUIT NEON',shirt:'#3a1a78',shorts:'#ff2a8a',accent:'#28e0ff',desc:'Singlet ungu tua, boxer pink neon, topeng ungu.'}
+ {name:'SUIT NEON',shirt:'#3a1a78',shorts:'#ff2a8a',accent:'#28e0ff',desc:'Singlet ungu tua, boxer pink neon, topeng ungu.'},
+ {name:'POLO T-SHIRT',shirt:'#eadcb8',shorts:'#5b4028',accent:'#7b4a2a',desc:'Polo polos krem, kerah coklat, celana coklat tua.'}
 ];
+const POLO_ID=9,POLO_BR='#a4723f';
+/* bentuk baju per outfit: sl=lengan (none/short/long), nk=leher, pocket/hem/zip=detail */
+const OUTFIT_SHAPE=[{sl:'short',nk:'crew'},{sl:'none',nk:'scoop'},{sl:'long',nk:'hood',pocket:1,hem:1},{sl:'long',nk:'crew'},{sl:'long',nk:'high',zip:1,hem:1},{sl:'none',nk:'vest'},{suit:1},{suit:1},{suit:1},{sl:'short',nk:'polo',col:'#7a4a26'}];
+/* BAJU KHUSUS TIAP KARAKTER: tampil paling depan di editor kostum karakter itu saja */
+const SIGS=[
+['adit','POLO ADIT','#eadcb8','#5b4028','Polo krem khas Adit, kerah coklat.',{sl:'short',nk:'polo',col:'#7a4a26'}],
+['waluyo','POLO WALUYO','#eadcb8','#5b4028','Polo krem, lengan merah, kerah coklat.',{sl:'short',nk:'polo',col:'#7a4a26',slc:'#d8322e'}],
+['ninja','SERAGAM SHINOBI','#292936','#3a4468','Lengan panjang, kerah tinggi, sabuk biru.',{sl:'long',nk:'high',sash:'#3a8aff'}],
+['sari','KEBAYA SAKURA','#ff7ab8','#3a2a7a','Blus lengan pendek leher V, selempang ungu.',{sl:'short',nk:'v',sash:'#8a4fd8'}],
+['laras','ROMPI PETARUNG','#d8322e','#23233a','Rompi tanpa lengan, sabuk hitam.',{sl:'none',nk:'scoop',sash:'#14141e'}],
+['maya','JUBAH PURNAMA','#8a4fd8','#1f2a44','Jubah lengan panjang menutupi pinggang.',{sl:'long',nk:'crew',hem:1}],
+['lios','KEMEJA LIOS','#1fa89a','#24304a','Kemeja lengan pendek, kerah gelap.',{sl:'short',nk:'polo',col:'#0e6a60'}],
+['siska','SERAGAM SD','#fff4f8','#e0405a','Seragam putih berkerah merah.',{sl:'short',nk:'polo',col:'#e0405a'}],
+['raka','JERSEY RAKA','#e23b3b','#f4f4f4','Jersey bola leher V, strip putih.',{sl:'short',nk:'v',trim:'#f4f4f4'}],
+['boi','HOODIE BOI','#5a6a3a','#2a3a5a','Hoodie hijau army khas anak jalanan.',{sl:'long',nk:'hood',pocket:1,hem:1}],
+['epi','JAKET API-AIR','#ff7a1a','#2a7fd8','Jaket oranye kerah tinggi, resleting.',{sl:'long',nk:'high',zip:1,hem:1}],
+['rainy','JAS HUJAN','#ffd23a','#2a3a6a','Jas hujan kuning bertudung dan berkantong.',{sl:'long',nk:'hood',pocket:1,hem:1}],
+['roket','JUMPSUIT ROKET','#eef0f6','#e23b3b','Jumpsuit putih lengan panjang, resleting.',{sl:'long',nk:'high',zip:1}],
+['bayu','ROMPI ANGIN','#2fbf9a','#1d3a5a','Rompi terbuka tanpa lengan.',{sl:'none',nk:'vest'}],
+['herth','JUBAH BAYANGAN','#4a2a7a','#1a1228','Jubah bertudung lengan panjang.',{sl:'long',nk:'hood',hem:1}],
+['krio','SWEATER ES','#7fd0ff','#1d3a7a','Sweater lengan panjang, strip putih.',{sl:'long',nk:'crew',trim:'#ffffff'}],
+['bara','SINGLET LAVA','#3a1a14','#7a1a10','Singlet gelap tanpa lengan, sabuk oranye.',{sl:'none',nk:'scoop',sash:'#ff8a1a'}],
+['gravi','KAOS GRAVITASI','#2a1a5a','#14102a','Kaos lengan pendek, strip pink.',{sl:'short',nk:'crew',trim:'#ff5ac8'}]
+];
+const SIG_OUT={};SIGS.forEach(g=>{SIG_OUT[g[0]]=OUTFITS.length;OUTFITS.push({name:g[1],shirt:g[2],shorts:g[3],accent:g[2],desc:g[4],only:g[0]});OUTFIT_SHAPE.push(g[5])});
+
 function drawOutfitDetails(R,x,y,w,h,id,accent,SH){
  return;/* V45: baju dibuat polos, tanpa motif */
  const X=v=>Math.round(x+v*w),Y=v=>Math.round(y+v*h),W=v=>Math.max(1,Math.round(v*w)),H=v=>Math.max(1,Math.round(v*h));
@@ -1127,7 +1154,7 @@ function drawOutfitDetails(R,x,y,w,h,id,accent,SH){
  }
 }
 
-const HATS=['TANPA','TOPI BASEBALL','BEANIE','MAHKOTA','HELMET','TOP HAT','TOPI SD'];
+const HATS=['TANPA','TOPI BASEBALL','BEANIE','MAHKOTA','HELMET','TOP HAT','TOPI SD','KOWBOI','CAPING','PECI','BLANGKON','PENYIHIR','TOPI KOKI','VIKING','KUPING KUCING'];
 /* V43: satu sumber gambar topi (dipakai sprite samping, pose menang & thumbnail). Koordinat relatif pusat kepala; kepala = x -4..4, y -5..3 */
 function drawHat(R,h,K){
  if(h===1){R(-5,-9,10,5,K('#d8402a'));R(-4,-10,8,1,K('#d8402a'));R(3,-5,7,2,K('#9a2a1c'));R(-4,-8,3,1,K('#f06a5a'));R(-1,-11,2,1,K('#9a2a1c'))}
@@ -1136,10 +1163,18 @@ function drawHat(R,h,K){
  else if(h===4){R(-4,-10,8,1,K('#8a9aaa'));R(-5,-9,10,4,K('#8a9aaa'));R(-5,-5,10,1,K('#3c4658'));R(-5,-4,2,5,K('#687b91'));R(-3,-9,3,1,K('#d9e5f2'));R(-1,-12,2,2,K('#d8402a'))}
  else if(h===5){R(-3,-15,7,8,K('#1c1c2a'));R(-3,-9,7,2,K('#d8402a'));R(-6,-7,13,2,K('#1c1c2a'));R(-2,-14,1,5,K('#3a3a52'))}
  else if(h===6){R(-4,-12,8,7,K('#d8322e'));R(-3,-13,6,1,K('#d8322e'));R(-3,-11,2,4,K('#f06a5a'));R(-4,-6,8,1,K('#9a1a1a'));R(3,-6,6,2,K('#9a1a1a'));R(0,-10,3,3,K('#ffffff'));R(1,-9,1,1,K('#ffd040'))}
+ else if(h===7){R(-8,-7,17,2,K('#8a5a30'));R(-8,-8,2,1,K('#8a5a30'));R(7,-8,2,1,K('#8a5a30'));R(-4,-13,9,6,K('#a8733a'));R(-4,-8,9,1,K('#4a2a14'));R(-1,-13,3,1,K('#6a431f'));R(-3,-12,2,3,K('#c58a50'))}
+ else if(h===8){const c='#d8b868',d='#a88838';R(-1,-14,2,1,K(c));R(-2,-13,4,1,K(d));R(-3,-12,6,1,K(c));R(-4,-11,8,1,K(d));R(-5,-10,10,1,K(c));R(-6,-9,12,1,K(d));R(-7,-8,14,1,K(c));R(-8,-7,16,1,K(d));R(-4,-6,1,5,K('#7a4a26'))}
+ else if(h===9){R(-4,-11,9,6,K('#1a1a1f'));R(-3,-12,7,1,K('#1a1a1f'));R(-5,-6,11,1,K('#1a1a1f'));R(-3,-10,3,1,K('#3a3a44'));R(-4,-6,9,1,K('#c9a02a'))}
+ else if(h===10){R(-5,-8,11,4,K('#5a3a22'));R(-4,-10,9,2,K('#6a4426'));R(-8,-9,4,5,K('#6a4426'));R(-3,-7,1,1,K('#c9a02a'));R(0,-6,1,1,K('#c9a02a'));R(3,-7,1,1,K('#c9a02a'))}
+ else if(h===11){R(-7,-5,15,1,K('#3a2a7a'));R(-5,-7,11,2,K('#3a2a7a'));R(-3,-10,7,3,K('#4a3a9a'));R(-2,-13,5,3,K('#4a3a9a'));R(-1,-16,3,3,K('#4a3a9a'));R(1,-18,2,2,K('#4a3a9a'));R(-4,-7,9,1,K('#ffd040'));R(0,-11,1,1,K('#ffd040'));R(-2,-9,1,1,K('#ffd040'))}
+ else if(h===12){R(-5,-8,10,3,K('#f4f4f4'));R(-6,-13,12,5,K('#f4f4f4'));R(-4,-15,8,2,K('#f4f4f4'));R(-5,-7,10,1,K('#d0d0dc'));R(-2,-13,1,5,K('#e0e0ea'));R(2,-12,1,4,K('#e0e0ea'))}
+ else if(h===13){R(-4,-10,9,4,K('#8a9aaa'));R(-5,-6,11,1,K('#5a6678'));R(-3,-9,3,1,K('#d9e5f2'));R(-7,-9,2,3,K('#f0e6c8'));R(-8,-12,2,3,K('#f0e6c8'));R(5,-9,2,3,K('#f0e6c8'));R(7,-12,2,3,K('#f0e6c8'))}
+ else if(h===14){R(-4,-6,9,1,K('#ff7ab8'));R(-4,-10,3,4,K('#2a2a36'));R(-3,-9,1,2,K('#ff9ac8'));R(2,-10,3,4,K('#2a2a36'));R(3,-9,1,2,K('#ff9ac8'))}
 }
 
 const SKINS=['#f2b684','#c58a5a','#f6d0a8','#9b603d','#e5a06f','#70452f'];
-const DEF_COS={adit:{shirt:'#f4f4f4',shorts:'#2f6fe4',gloves:'#e23b3b',shoes:'#14141e',acc:0,skin:'#f2b684',outfit:0,hat:0},waluyo:{shirt:'#f2c230',shorts:'#e23b3b',gloves:'#2d9d4c',shoes:'#8a5a30',acc:0,skin:'#c58a5a',outfit:1,hat:0},spiderman:{shirt:'#1d3a8a',shorts:'#c81e2c',gloves:'#e0222f',shoes:'#1d3a8a',acc:0,skin:'#f2b684',outfit:6,hat:0},boge:{shirt:'#6f7b8e',shorts:'#2b3345',gloves:'#e2a572',shoes:'#e8e8f0',acc:0,skin:'#e2a572',outfit:0,hat:0},ninja:{shirt:'#292936',shorts:'#3a4468',gloves:'#3a8aff',shoes:'#14141e',acc:0,skin:'#f2b684',outfit:2,hat:0},sari:{shirt:'#ff7ab8',shorts:'#3a2a7a',gloves:'#ff3f8e',shoes:'#f4f4f4',acc:0,skin:'#f6d0a8',outfit:3,hat:0},laras:{shirt:'#d8322e',shorts:'#23233a',gloves:'#f4f4f4',shoes:'#23233a',acc:0,skin:'#d9a070',outfit:4,hat:0},maya:{shirt:'#8a4fd8',shorts:'#1f2a44',gloves:'#2fd0c0',shoes:'#1f2a44',acc:0,skin:'#f2b684',outfit:5,hat:0},boi:{shirt:'#5a6a3a',shorts:'#2a3a5a',gloves:'#e5a06f',shoes:'#f4f4f4',acc:0,skin:'#e5a06f',outfit:0,hat:1},raka:{shirt:'#e23b3b',shorts:'#f4f4f4',gloves:'#9b603d',shoes:'#ffd040',acc:0,skin:'#9b603d',outfit:0,hat:0}};
+const DEF_COS={adit:{shirt:'#eadcb8',shorts:'#5b4028',gloves:'#e23b3b',shoes:'#14141e',acc:0,skin:'#f2b684',outfit:9,hat:0},waluyo:{shirt:'#eadcb8',shorts:'#5b4028',gloves:'#2d9d4c',shoes:'#8a5a30',acc:0,skin:'#c58a5a',outfit:9,hat:0},spiderman:{shirt:'#1d3a8a',shorts:'#c81e2c',gloves:'#e0222f',shoes:'#1d3a8a',acc:0,skin:'#f2b684',outfit:6,hat:0},boge:{shirt:'#6f7b8e',shorts:'#2b3345',gloves:'#e2a572',shoes:'#e8e8f0',acc:0,skin:'#e2a572',outfit:0,hat:0},ninja:{shirt:'#292936',shorts:'#3a4468',gloves:'#3a8aff',shoes:'#14141e',acc:0,skin:'#f2b684',outfit:2,hat:0},sari:{shirt:'#ff7ab8',shorts:'#3a2a7a',gloves:'#ff3f8e',shoes:'#f4f4f4',acc:0,skin:'#f6d0a8',outfit:3,hat:0},laras:{shirt:'#d8322e',shorts:'#23233a',gloves:'#f4f4f4',shoes:'#23233a',acc:0,skin:'#d9a070',outfit:4,hat:0},maya:{shirt:'#8a4fd8',shorts:'#1f2a44',gloves:'#2fd0c0',shoes:'#1f2a44',acc:0,skin:'#f2b684',outfit:5,hat:0},boi:{shirt:'#5a6a3a',shorts:'#2a3a5a',gloves:'#e5a06f',shoes:'#f4f4f4',acc:0,skin:'#e5a06f',outfit:0,hat:1},raka:{shirt:'#e23b3b',shorts:'#f4f4f4',gloves:'#9b603d',shoes:'#ffd040',acc:0,skin:'#9b603d',outfit:0,hat:0}};
 DEF_COS.lios={shirt:'#1fa89a',shorts:'#24304a',gloves:'#f2c230',shoes:'#f4f4f4',acc:0,skin:'#e8b080',outfit:0,hat:0};/* LIOS: karakter baru (seimbang) */
 DEF_COS.epi={shirt:'#ff7a1a',shorts:'#2a7fd8',gloves:'#ffd040',shoes:'#f4f4f4',acc:0,skin:'#f0b88a',outfit:0,hat:0};/* EPI: kostum oranye-tosca */
 DEF_COS.rainy={shirt:'#ffd23a',shorts:'#2a3a6a',gloves:'#5ab4ff',shoes:'#2f6fe4',acc:0,skin:'#f4cfa6',outfit:0,hat:0};/* RAINY: jas hujan kuning */
@@ -1152,7 +1187,10 @@ DEF_COS.bara={shirt:'#3a1a14',shorts:'#7a1a10',gloves:'#ff8a1a',shoes:'#2a1410',
 DEF_COS.gravi={shirt:'#2a1a5a',shorts:'#14102a',gloves:'#ff5ac8',shoes:'#ff5ac8',acc:0,skin:'#f0c8a8',outfit:0,hat:0};/* GRAVI: pengendali gravitasi */
 DEF_COS.naga={shirt:'#2f9a46',shorts:'#1f6a30',gloves:'#e8c850',shoes:'#e8c850',acc:0,skin:'#3fa04a',outfit:0,hat:0};
 const COS={};
+for(const id in SIG_OUT)if(DEF_COS[id]){DEF_COS[id].outfit=SIG_OUT[id];DEF_COS[id].shirt=OUTFITS[SIG_OUT[id]].shirt;DEF_COS[id].shorts=OUTFITS[SIG_OUT[id]].shorts}
 (function(){const sv=LS.get('pf_costume_v1',{});for(const id of Object.keys(DEF_COS)){COS[id]=Object.assign({},DEF_COS[id]);const saved=sv[id];if(id!=='boge'&&saved&&typeof saved==='object'){for(const k of ['shirt','shorts','gloves','shoes'])if(typeof saved[k]==='string'&&/^#[0-9a-f]{6}$/i.test(saved[k]))COS[id][k]=saved[k];if(Number.isInteger(saved.acc)&&saved.acc>=0&&saved.acc<ACC.length)COS[id].acc=saved.acc;if(Number.isInteger(saved.outfit)&&saved.outfit>=0&&saved.outfit<OUTFITS.length)COS[id].outfit=saved.outfit;if(Number.isInteger(saved.hat)&&saved.hat>=0&&saved.hat<HATS.length)COS[id].hat=saved.hat;if(typeof saved.skin==='string'&&/^#[0-9a-f]{6}$/i.test(saved.skin))COS[id].skin=saved.skin}if(id!=='boge'&&id!=='naga'&&id!=='lios'&&id!=='siska'&&id!=='epi'&&id!=='rainy'&&id!=='roket'){COS[id].shirt=OUTFITS[COS[id].outfit].shirt;COS[id].shorts=OUTFITS[COS[id].outfit].shorts}}if(!LS.get('pf_sp_v71',0)){COS.spiderman=Object.assign({},DEF_COS.spiderman);LS.set('pf_sp_v71',1)}})();
+(function(){if(LS.get('pf_polo_v1',0))return;for(const id of ['adit','waluyo']){const co=COS[id];if(!co)continue;co.outfit=POLO_ID;co.shirt=OUTFITS[POLO_ID].shirt;co.shorts=OUTFITS[POLO_ID].shorts}LS.set('pf_polo_v1',1)})();
+(function(){if(LS.get('pf_sig_v1',0))return;const OLD={adit:9,waluyo:9,ninja:2,sari:3,laras:4,maya:5};for(const id in SIG_OUT){const co=COS[id];if(!co)continue;if(co.outfit===(OLD[id]||0)){co.outfit=SIG_OUT[id];co.shirt=OUTFITS[co.outfit].shirt;co.shorts=OUTFITS[co.outfit].shorts}}LS.set('pf_sig_v1',1)})();/* baju khusus tiap karakter jadi bawaan (hanya bila belum diganti) *//* polo strit jadi baju baru Adit & Waluyo (sekali, menimpa kostum tersimpan lama) */
 const CHARS={
   adit:{id:'adit',name:'ADIT',skin:'#f2b684',hair:'#241410',build:0,bodyW:9,limbW:3,hp:100,walk:88,run:150,jump:-375,dmg:1,def:1,stats:[3,5,3]},
   waluyo:{id:'waluyo',name:'WALUYO',skin:'#c58a5a',hair:'#15121a',build:1,bodyW:12,limbW:4,hp:100,walk:76,run:128,jump:-355,dmg:1.12,def:.9,stats:[5,3,4]},
@@ -2412,8 +2450,10 @@ function frontParts(c,s,force,flash,fc,pump,arms){
   if(plain){R(-7,-1,6,1,SH(co.shoes,.6));R(2,-1,6,1,SH(co.shoes,.6));R(-6,-3,2,1,SH(co.shoes,1.5));R(3,-3,2,1,SH(co.shoes,1.5))}
   /* badan: kaos dalam, bahu lebar, leher */
   R(-5,-29,11,12,shirt);
+  if(false)for(let y=-28;y<-17;y++)if((y+29)%4===1||(y+29)%4===2)R(-5,y,11,1,POLO_BR);
   R(-2,-31,5,3,skin);R(-7,-28,2,4,skin);R(6,-28,2,4,skin);
   R(-2,-29,5,1,skin);R(-1,-28,3,1,skin);
+  if(plain&&(OUTFIT_SHAPE[co.outfit]||{}).nk==='polo'){R(-4,-29,2,2,(OUTFIT_SHAPE[co.outfit].col||'#7a4a26'));R(3,-29,2,2,(OUTFIT_SHAPE[co.outfit].col||'#7a4a26'));R(0,-27,1,3,(OUTFIT_SHAPE[co.outfit].col||'#7a4a26'))}
   if(plain){R(-5,-27,2,9,SH(co.shirt,.8));R(3,-27,2,8,SH(co.shirt,1.15))}
   /* Motif kostum: tiap outfit punya emblem, panel, garis, atau pelindung berbeda. */
   drawOutfitDetails(R,-5,-29,11,12,co.outfit,(OUTFITS[co.outfit]||OUTFITS[0]).accent,SH);
@@ -2499,7 +2539,11 @@ function frontPartsW(c,s,force,flash,sd,jt){
   R(-6,-8,4,5,skin);R(3,-8,4,5,skin);R(-8,-3,7,3,shoe);R(2,-3,7,3,shoe);
   if(plain){R(-8,-1,7,1,SH(co.shoes,.6));R(2,-1,7,1,SH(co.shoes,.6));R(-7,-3,2,1,SH(co.shoes,1.5));R(3,-3,2,1,SH(co.shoes,1.5))}
   /* badan (lebih lebar dari Adit, sesuai build Waluyo) */
-  R(-7,-29,15,12,shirt);R(-2,-31,5,3,skin);R(-9,-28,2,4,skin);R(8,-28,2,4,skin);R(-2,-29,5,1,skin);R(-1,-28,3,1,skin);
+  R(-7,-29,15,12,shirt);
+  if(false)for(let y=-28;y<-17;y++)if((y+29)%4===1||(y+29)%4===2)R(-7,y,15,1,POLO_BR);
+  R(-2,-31,5,3,skin);R(-9,-28,2,4,skin);R(8,-28,2,4,skin);R(-2,-29,5,1,skin);R(-1,-28,3,1,skin);
+  if(plain&&(OUTFIT_SHAPE[co.outfit]||{}).nk==='polo'){R(-4,-29,2,2,(OUTFIT_SHAPE[co.outfit].col||'#7a4a26'));R(3,-29,2,2,(OUTFIT_SHAPE[co.outfit].col||'#7a4a26'));R(0,-27,1,3,(OUTFIT_SHAPE[co.outfit].col||'#7a4a26'))}
+  const armc=((OUTFIT_SHAPE[co.outfit]||{}).slc)?K(OUTFIT_SHAPE[co.outfit].slc):((OUTFIT_SHAPE[co.outfit]||{}).sl==='long')?shirt:skin;
   if(plain){R(-7,-27,2,9,SH(co.shirt,.8));R(5,-27,3,8,SH(co.shirt,1.15))}
   /* Detail outfit mengikuti proporsi tubuh Waluyo. */
   drawOutfitDetails(R,-7,-29,15,12,co.outfit,(OUTFITS[co.outfit]||OUTFITS[0]).accent,SH);
@@ -2507,13 +2551,13 @@ function frontPartsW(c,s,force,flash,sd,jt){
   if(plain){R(-7,-9,6,1,SH(co.shorts,.7));R(2,-9,6,1,SH(co.shorts,.7));R(-7,-16,2,4,SH(co.shorts,.78));R(4,-17,3,4,SH(co.shorts,.9))}
   if(co.acc===5){R(2,-25,3,1,K('#ffd040'));R(3,-26,1,3,K('#ffd040'))}
   /* tangan di pinggang */
-  LL(-9,-26,-14,-21,3,skin);LL(-14,-21,-9,-17,3,skin);RS(-12,-19,5,5,glove);if(plain)RS(-12,-19,2,1,SH(co.gloves,1.4));
+  LL(-9,-26,-14,-21,3,armc);LL(-14,-21,-9,-17,3,armc);RS(-12,-19,5,5,glove);if(plain)RS(-12,-19,2,1,SH(co.gloves,1.4));
   /* tangan jempol */
   let big=null;
-  if(!up){const b=Math.sin(t*3)>.3?1:0;LL(9,-26,14,-27,3,skin);LL(14,-27,12,-33-b,3,skin);RS(10,-36-b,5,5,glove);if(plain)RS(10,-36-b,2,1,SH(co.gloves,1.4))}
-  else if(jt<.05){const k=jt/.05,fx=12+3*k,fy=-34-8*k,ex=14+k*2,ey=-27-k*4;LL(9,-26,ex,ey,3,skin);LL(ex,ey,fx,fy,3,skin);RS(Math.round(fx)-2,Math.round(fy)-2,5,5,glove)}
+  if(!up){const b=Math.sin(t*3)>.3?1:0;LL(9,-26,14,-27,3,armc);LL(14,-27,12,-33-b,3,armc);RS(10,-36-b,5,5,glove);if(plain)RS(10,-36-b,2,1,SH(co.gloves,1.4))}
+  else if(jt<.05){const k=jt/.05,fx=12+3*k,fy=-34-8*k,ex=14+k*2,ey=-27-k*4;LL(9,-26,ex,ey,3,armc);LL(ex,ey,fx,fy,3,armc);RS(Math.round(fx)-2,Math.round(fy)-2,5,5,glove)}
   else{const z=jt<.09?2:jt<.15?4:3,P=z===2?[20,-17]:z===4?[27,-8]:[25,-10],jx=jt<.6?((Math.floor(jt*40)&1)?1:-1):0,py=-Math.round(Math.abs(Math.sin(jt*9+1))),fx=P[0]+jx,fyB=P[1]+py;
-    LL(9,-26,fx,fyB-6,5,skin);big={z,fx,fyB}}
+    LL(9,-26,fx,fyB-6,5,armc);big={z,fx,fyB}}
   /* kepala menghadap kamera */
   R(-4,-39,9,9,skin);R(-5,-36,1,3,skin);R(5,-36,1,3,skin);
   if(!ch.bald){const T=hairTones(ch,plain,force,flash);hairFrontStyle(R,ch,T,co.acc===2||co.hat>0)}
@@ -2590,7 +2634,7 @@ function frontPartsSP(c,s,force,flash,mode,u){
   R(-5,-29,11,12,skin);R(-5,-27,11,10,shirt);R(-4,-29,2,3,shirt);R(2,-29,2,3,shirt);
   if(plain){R(-5,-26,2,8,SH(co.shirt,.8));R(3,-26,2,7,SH(co.shirt,1.15))}
   R(-2,-31,5,3,red);
-  if(plain&&SC.em&&co.outfit>=6){R(-1,-27,3,1,SC.em);R(0,-28,1,4,SC.em);R(-2,-26,5,1,SC.em)}
+  if(false){R(-1,-27,3,1,SC.em);R(0,-28,1,4,SC.em);R(-2,-26,5,1,SC.em)}
   /* boxer */
   if(hang){R(-4,-13,4,5,shorts);R(1,-13,4,5,shorts)}else{R(-6,-13,5,5,shorts);R(2,-13,5,5,shorts)}
   R(-5,-18,11,6,shorts);R(-5,-18,11,2,band);
@@ -2872,7 +2916,7 @@ const SPM={red:'#d8202c',lens:'#ffffff',strap:'#8f1119',web:'#7a0c16',em:null};
 const SPSK={6:{red:'#e0222f',strap:'#8f1119',web:'#9a1019',em:'#e0222f'},7:{red:'#1a1a24',strap:'#07070c',web:'#3c3c52',em:'#e0222f'},8:{red:'#8a2be2',strap:'#4a1480',web:'#c9a0ff',em:'#28e0ff'}};
 function spCol(co){return Object.assign({},SPM,SPSK[co&&co.outfit]||{})}
 /* V24: topeng merah polos + goggle putih bundar */
-function spBand(hex){const n=parseInt(hex.slice(1),16),r=n>>16,g=(n>>8)&255,b=n&255;return (r>140&&g<110&&b<110)?'#2f6fe4':'#e23b3b'}/* aksen boxer: merah, atau biru bila celana sendiri sudah merah */
+function spBand(hex){const n=parseInt(hex.slice(1),16),r=n>>16,g=(n>>8)&255,b=n&255;return shade(hex,.8)}/* aksen boxer: merah, atau biru bila celana sendiri sudah merah */
 /* topeng 9x9 (tampak samping menghadap +x), digambar ke daftar kotak kepala (g) agar ikut rotasi kepala */
 function spiderMask(g,hx,hy,plain,force,flash,co){
   const M=spCol(co);
@@ -2890,7 +2934,7 @@ function spiderBody(c,P,sx,hx,mx,hw,tw2,skin,shorts,co,force,flash,plain,K,SH,ba
   R(sx-hw,P.sy+2,tw2,4,sh);R(mx-hw,P.sy+6,tw2,5,sh);R(hx-hw,P.sy+11,tw2,hb,sh);/* singlet */
   R(sx-hw+1,P.sy,2,3,sh);R(sx+hw-3,P.sy,2,3,sh);/* tali bahu */
   const M=spCol(co);R(sx-2,P.sy-1,4,3,K(M.red));
-  if(plain&&M.em&&co.outfit>=6){R(mx-1,P.sy+3,3,1,M.em);R(mx,P.sy+2,1,4,M.em);R(mx-2,P.sy+4,5,1,M.em)}/* lambang laba-laba */
+  if(false){R(mx-1,P.sy+3,3,1,M.em);R(mx,P.sy+2,1,4,M.em);R(mx-2,P.sy+4,5,1,M.em)}/* lambang laba-laba */
   R(hx-hw,P.hy-1,tw2,7,shorts);R(hx-hw,P.hy-1,tw2,2,K(band));
 }
 function legS(c,x1,y1,x2,y2,L,w,skin,sh,hem,plain){
@@ -2899,6 +2943,10 @@ function legS(c,x1,y1,x2,y2,L,w,skin,sh,hem,plain){
   limbLine(c,x1,y1,mx,my,w+2,sh);limbShade(c,x1,y1,mx,my,w+2,sh);c.fillStyle=hem;c.fillRect(mx-((w+2)>>1),my,w+2,1);
 }
 function armS(c,x1,y1,x2,y2,L,skin,plain){arm(c,x1,y1,x2,y2,L,skin)}
+function outfitArm(c,x1,y1,x2,y2,L,skin,sc,sl,w){w=w||3;
+  if(sl==='long'){arm(c,x1,y1,x2,y2,L,sc,w);return}
+  arm(c,x1,y1,x2,y2,L,skin,w);
+  if(sl==='short'){const r=ik(x1,y1,x2,y2,L,-1),ex=Math.round(x1+(r[0]-x1)*.62),ey=Math.round(y1+(r[1]-y1)*.62),ax=Math.round(x1),ay=Math.round(y1);limbLine(c,ax,ay,ex,ey,w+1,sc);limbShade(c,ax,ay,ex,ey,w+1,sc)}}
 function spiderLie(c,s,force,flash,K,SH,band){
   const co=s.co,ch=(s.co&&s.co.skin?Object.assign({},s.ch,{skin:s.co.skin}):s.ch),plain=!force&&!flash,skin=K(ch.skin),shorts=K(co.shorts),glove=K(co.gloves),shoe=K(co.shoes),
     R=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h)};
@@ -2980,19 +3028,25 @@ function parts0(c,P,s,force,flash){
     return}
   // kaki & lengan belakang
   const band=SP?spBand(co.shorts):null,capc=K(co.gloves),cuff=K(co.shoes);
+  const OSH=(SP||ch.hoodie||ch.fat||ch.dragon)?{suit:1}:(OUTFIT_SHAPE[co.outfit]||OUTFIT_SHAPE[0]),slv=OSH.suit?'none':OSH.sl,slc=OSH.slc?K(OSH.slc):shirt;
   const fsh=(f,k)=>{const fx=f[0],fy=f[1];if(k>.4){c.fillRect(fx-1,fy-5,4,6);if(plain){c.fillStyle=SH(co.shoes,.5);c.fillRect(fx+2,fy-5,1,6);c.fillStyle=SH(co.shoes,1.35);c.fillRect(fx-1,fy-5,2,1);c.fillStyle=SH(co.shoes,1.04);c.fillRect(fx+2,fy-5,1,1)}}else{c.fillRect(fx-3,fy-3,8,3);if(plain){c.fillStyle=SH(co.shoes,1.3);c.fillRect(fx-2,fy-3,4,1);c.fillStyle=SH(co.shoes,.78);c.fillRect(fx-3,fy-3,1,2);c.fillRect(fx+3,fy-2,2,1);c.fillStyle=SH(co.shoes,1.04);c.fillRect(fx-1,fy-3,1,1);c.fillRect(fx+1,fy-3,1,1);c.fillStyle=SH(co.shoes,.86);c.fillRect(fx-3,fy-1,8,1);c.fillStyle=SH(co.shoes,.76);c.fillRect(fx-3,fy-1,2,1)}}};/* V7: sepatu tegak (telapak ke depan) saat menendang; STAGE 3: ujung sepatu Spider-Man beraksen */
   const lgs=(x1,y1,x2,y2,L,sh,hem)=>SP?legS(c,x1,y1,x2,y2,L,lw,skin,sh,hem,plain):leg(c,x1,y1,x2,y2,L,lw,skin,ch.skirt?skin:sh,ch.skirt?skin:hem,ch.pants);
   const glv=h=>{const gx=Math.round(h[0])-2,gy=Math.round(h[1])-2;c.fillStyle=glove;c.fillRect(gx,gy,5,5);if(plain){c.fillStyle=SH(co.gloves,1.3);c.fillRect(gx+1,gy,3,1);c.fillRect(gx+1,gy+1,2,1);c.fillStyle=SH(co.gloves,.72);c.fillRect(gx,gy+4,5,1);c.fillStyle=SH(co.gloves,.85);c.fillRect(gx,gy+1,1,3);c.fillStyle=SH(co.gloves,.58);c.fillRect(gx+4,gy+1,1,1);c.fillRect(gx+4,gy+3,1,1)}};
-  const armG=(x1,y1,h,L)=>{if(SP)armS(c,x1,y1,h[0],h[1],L,skin,plain);else arm(c,x1,y1,h[0],h[1],L,ch.hoodie?shirt:skin,ch.limbW||3);glv(h)};
+  const armG=(x1,y1,h,L)=>{if(SP)armS(c,x1,y1,h[0],h[1],L,skin,plain);else if(slv==='short'||slv==='long')outfitArm(c,x1,y1,h[0],h[1],L,skin,slc,slv,ch.limbW||3);else arm(c,x1,y1,h[0],h[1],L,ch.hoodie?shirt:skin,ch.limbW||3);glv(h)};
   const drawBL=()=>{lgs(P.hx-1+P.hjb,P.hy+2,P.bf[0],P.bf[1]-2,P.bfL,SH(co.shorts,.85),SP?SH(band,.75):SH(co.shorts,.7));c.fillStyle=shoe;fsh(P.bf,P.kb)};
   if(ch.dragon){dgWing(c,P,s,K,SH,plain,true);dgTail(c,P,s,K,SH,skin,plain);dgWing(c,P,s,K,SH,plain,false)}
   const kickB=P.kb>.15;if(!kickB)drawBL();
+  if((co.acc===8||co.acc===11||co.acc===12)&&!ch.dragon){const bx=Math.round(P.sx),mvv=s.mv||0,fl=Math.round(Math.sin(s.t*(co.acc===12?10:6))*(co.acc===12?2:1)+mvv*2);
+    if(co.acc===8){c.fillStyle=K('#d8322e');c.fillRect(bx-hw-3-fl,P.sy+1,4+fl,P.hy-P.sy+8);c.fillStyle=SH('#d8322e',.7);c.fillRect(bx-hw-3-fl,P.sy+P.hy-P.sy+5,4+fl,3);if(plain){c.fillStyle=SH('#d8322e',1.25);c.fillRect(bx-hw-1,P.sy+2,1,P.hy-P.sy+4)}}
+    else if(co.acc===11){c.fillStyle=K('#3a6ab8');c.fillRect(bx-hw-5,P.sy+1,6,11);c.fillStyle=SH('#3a6ab8',.7);c.fillRect(bx-hw-5,P.sy+8,6,4);c.fillStyle=K('#ffd040');c.fillRect(bx-hw-4,P.sy+3,3,1);if(plain){c.fillStyle='#8ab4e8';c.fillRect(bx-hw-5,P.sy+1,6,1)}}
+    else{c.fillStyle=K('#ffffff');c.fillRect(bx-hw-6-fl,P.sy-3,6+fl,4);c.fillRect(bx-hw-8-fl,P.sy+1,8+fl,3);c.fillRect(bx-hw-7-fl,P.sy+4,6+fl,3);c.fillStyle=K('#cfd6ee');c.fillRect(bx-hw-5-fl,P.sy,1,6)}}
   armG(P.sx-1+P.jb,P.sy+2,P.bh,P.bhL);
   // badan: kaos dalam
   const sx=Math.round(P.sx),hx=Math.round(P.hx),mx=Math.round((P.sx+P.hx)/2);
   if(SP)spiderBody(c,P,sx,hx,mx,hw,tw2,skin,shorts,co,force,flash,plain,K,SH,band);else{
   c.fillStyle=shirt;c.fillRect(sx-hw,P.sy,tw2,6);c.fillRect(mx-hw,P.sy+6,tw2,5);c.fillRect(hx-hw,P.sy+11,tw2,P.hy-(P.sy+11)+1);
   if(ch.build){c.fillRect(hx+hw,P.sy+7,1,5)}
+  if(false){c.fillStyle=POLO_BR;for(let r=1;r<=P.hy-P.sy;r++)if(r%4===1||r%4===2){const bx=r<6?sx:r<11?mx:hx;c.fillRect(bx-hw,P.sy+r,tw2,1)}}/* polo strit: garis coklat */
   if(ch.fat){/* perut buncit */c.fillRect(mx+hw,P.sy+4,3,10);c.fillRect(hx+hw,P.sy+10,2,6);c.fillStyle=SH(co.shirt,.85);c.fillRect(mx+hw+1,P.sy+12,2,2);c.fillStyle=skin;c.fillRect(mx+hw-3,P.sy+9,2,1)}
   c.fillStyle=SH(co.shirt,.8);c.fillRect(sx-hw,P.sy+1,2,5);c.fillRect(mx-hw,P.sy+6,2,5);c.fillRect(hx-hw,P.sy+11,2,Math.max(1,P.hy-(P.sy+11)));c.fillStyle=SH(co.shirt,1.15);c.fillRect(sx+hw-2,P.sy+2,1,6);
   if(ch.hoodie){c.fillStyle=SH(co.shirt,.72);c.fillRect(sx-hw-2,P.sy-2,5,6);
@@ -3001,23 +3055,27 @@ function parts0(c,P,s,force,flash){
     c.fillStyle=SH(co.shirt,.78);c.fillRect(mx-3,P.sy+7,10,4);
     c.fillStyle=SH(co.shirt,1.2);c.fillRect(mx-3,P.sy+7,10,1);
     if(plain){c.fillStyle='#f4f4f4';c.fillRect(sx+2,P.sy+1,1,4);c.fillRect(sx+4,P.sy+1,1,3)}
-  }else{c.fillStyle=skin;c.fillRect(sx-2,P.sy-1,4,3);c.fillRect(sx-hw,P.sy,2,3);c.fillRect(sx+hw-2,P.sy,2,3);c.fillRect(sx-hw-1,P.sy+1,1,3);c.fillRect(sx+hw,P.sy+1,1,3);}
+  }else if(!OSH.suit&&OSH.sl!=='none'){/* baju berlengan: bahu tertutup kain */
+    c.fillStyle=skin;c.fillRect(sx-1,P.sy-1,3,2);if(OSH.nk==='v'){c.fillRect(sx-2,P.sy-1,4,2);c.fillRect(sx-1,P.sy+1,2,2)}
+    if(OSH.nk==='hood'){c.fillStyle=SH(co.shirt,.72);c.fillRect(sx-hw-2,P.sy-2,5,6);c.fillStyle=SH(co.shirt,1.12);c.fillRect(sx-2,P.sy-1,5,2);c.fillStyle=skin;c.fillRect(sx-1,P.sy-1,3,1)}
+    if(OSH.nk==='high'){c.fillStyle=SH(co.shirt,1.1);c.fillRect(sx-3,P.sy-2,5,3);c.fillStyle=skin;c.fillRect(sx-1,P.sy-1,2,1)}
+  }else{c.fillStyle=skin;c.fillRect(sx-2,P.sy-1,4,3);c.fillRect(sx-hw,P.sy,2,3);c.fillRect(sx+hw-2,P.sy,2,3);c.fillRect(sx-hw-1,P.sy+1,1,3);c.fillRect(sx+hw,P.sy+1,1,3);
+    if(!OSH.suit&&OSH.nk==='vest'){c.fillRect(sx-1,P.sy+1,3,5);c.fillRect(mx-1,P.sy+6,3,5);if(plain){c.fillStyle=SH(ch.skin,.8);c.fillRect(sx-1,P.sy+3,1,3);c.fillRect(mx-1,P.sy+7,1,3)}}}
   if(plain&&!ch.fat&&!ch.dragon){c.fillStyle=SH(co.shirt,1.32);c.fillRect(sx+hw-1,P.sy+1,1,6);c.fillRect(mx+hw-1,P.sy+6,1,5);c.fillRect(hx+hw-1,P.sy+11,1,Math.max(1,P.hy-(P.sy+11)));c.fillStyle=SH(co.shirt,.86);c.fillRect(sx-hw+2,P.sy+6,tw2-4,1);if(!ch.hoodie){c.fillStyle=SH(ch.skin,.76);c.fillRect(sx-1,P.sy-1,3,1)}}
+  if(plain&&!OSH.suit){const cc=OSH.col||SH(co.shirt,.6);
+    if(OSH.nk==='polo'){c.fillStyle=cc;c.fillRect(sx-3,P.sy,2,2);c.fillRect(sx+1,P.sy,2,2);c.fillRect(sx,P.sy+2,1,3)}/* kerah & plaket polo */
+    else if(OSH.nk==='crew'){c.fillStyle=SH(co.shirt,.78);c.fillRect(sx-2,P.sy,4,1)}
+    if(OSH.zip){c.fillStyle=SH(co.shirt,.45);c.fillRect(sx,P.sy,1,6);c.fillRect(mx,P.sy+6,1,5);c.fillRect(hx,P.sy+11,1,Math.max(1,P.hy-(P.sy+11)))}
+    if(OSH.pocket){c.fillStyle=SH(co.shirt,.78);c.fillRect(mx-hw+1,P.sy+7,tw2-2,4);c.fillStyle=SH(co.shirt,1.2);c.fillRect(mx-hw+1,P.sy+7,tw2-2,1);c.fillStyle='#f4f4f4';c.fillRect(sx+1,P.sy+1,1,4)}}
   c.fillStyle=shorts;c.fillRect(hx-hw,P.hy-1,tw2,7);c.fillStyle=dark;c.fillRect(hx-hw,P.hy-1,tw2,1);c.fillStyle=SH(co.shorts,.78);c.fillRect(hx-hw,P.hy+4,tw2,2);c.fillRect(hx-hw,P.hy,2,4);if(plain&&!ch.fat){c.fillStyle=SH(co.shorts,1.3);c.fillRect(hx+hw-1,P.hy+1,1,4);c.fillRect(hx-hw+2,P.hy,tw2-4,1)}
   drawOutfitDetails((x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h)},sx-hw,P.sy,tw2,Math.max(1,P.hy-P.sy+5),co.outfit,(OUTFITS[co.outfit]||OUTFITS[0]).accent,SH);
+  if(!OSH.suit&&OSH.hem){c.fillStyle=shirt;c.fillRect(hx-hw,P.hy-2,tw2,3);if(plain){c.fillStyle=SH(co.shirt,.68);c.fillRect(hx-hw,P.hy,tw2,1)}}/* hoodie/jaket menutupi pinggang */
+  if(plain&&!OSH.suit){if(OSH.sash){c.fillStyle=OSH.sash;c.fillRect(hx-hw,P.hy-3,tw2,2)}if(OSH.trim){c.fillStyle=OSH.trim;c.fillRect(hx-hw,P.hy-3,tw2,1);c.fillRect(sx-hw,P.sy+1,1,4)}}/* sabuk / strip khusus */
   /* V136: identitas visual Adit & Waluyo. Detail memakai warna kostum aktif agar tetap cocok dengan editor kostum. */
-  if(plain&&ch.id==='adit'){
-    c.fillStyle=SH(co.shorts,.92);c.fillRect(sx-1,P.sy+2,2,7);c.fillRect(sx-2,P.sy+4,4,1);
-    c.fillStyle=SH(co.gloves,.9);c.fillRect(sx+2,P.sy+3,2,2);
-    c.fillStyle=SH(co.shorts,.82);c.fillRect(hx-hw+1,P.hy+1,1,4);c.fillRect(hx+hw-2,P.hy+1,1,4);
-  }else if(plain&&ch.id==='waluyo'){
-    c.fillStyle=SH(co.gloves,.9);c.fillRect(sx-2,P.sy,4,2);c.fillRect(sx-1,P.sy+2,2,2);
-    c.fillStyle=SH(co.shorts,.88);c.fillRect(sx+2,P.sy+6,2,3);
-    c.fillStyle=SH(co.shoes,.9);c.fillRect(hx-hw+1,P.hy+1,1,4);c.fillRect(hx+hw-2,P.hy+1,1,4);
-  }
   if(ch.dragon)dgTorso(c,P,sx,mx,hx,hw,tw2,K,SH,plain,co);
   }
   if(co.acc===5){c.fillStyle=K('#ffd040');c.fillRect(sx+1,P.sy+4,3,1);c.fillRect(sx+2,P.sy+3,1,3)}
+  if(co.acc===7){c.fillStyle=K('#ffd040');c.fillRect(sx-2,P.sy+1,4,1);c.fillRect(sx-1,P.sy+2,2,1);c.fillRect(sx+1,P.sy+3,2,2);if(plain){c.fillStyle='#fff3a6';c.fillRect(sx+1,P.sy+3,1,1)}}
   // kepala
   const hdx=Math.round(P.hdx),hdy=Math.round(P.hdy),hd=P.hd||HD0,hc=HR();
   if(SP)spiderMask(hc,hdx,hdy,plain,force,flash,co);else if(ch.dragon)dgHead(hc,hdx,hdy,s,K,SH,skin,plain);else{
@@ -3032,6 +3090,9 @@ function parts0(c,P,s,force,flash){
   if(co.acc===1){const mv=s.mv||0,w1=Math.round(Math.sin(s.t*9)*(.5+mv*1.5)),ex=Math.round(mv*2);hc.fillStyle=glove;hc.fillRect(hdx-5,hdy-4,10,2);hc.fillRect(hdx-9-ex,hdy-3,4+ex,1);hc.fillRect(hdx-10-ex,hdy-2+w1,3,2)}
   else if(co.acc===2){hc.fillStyle=shorts;hc.fillRect(hdx-5,hdy-8,10,4);hc.fillRect(hdx+3,hdy-5,6,2);hc.fillStyle=K('#ffffff');hc.fillRect(hdx-1,hdy-7,2,2)}
   else if(co.acc===3){hc.fillStyle=K('#14101e');hc.fillRect(hdx-1,hdy-3,7,3);if(plain){hc.fillStyle='#8ae';hc.fillRect(hdx,hdy-3,2,1)}}
+  else if(co.acc===6){hc.fillStyle=K('#d8ecff');hc.fillRect(hdx-1,hdy+1,6,3);hc.fillStyle=K('#9ab4cc');hc.fillRect(hdx-4,hdy+1,3,1);if(plain){hc.fillStyle='#b4cce4';hc.fillRect(hdx,hdy+2,4,1)}}
+  else if(co.acc===9){hc.fillStyle=K('#14101e');hc.fillRect(hdx+1,hdy-3,3,3);hc.fillRect(hdx-4,hdy-4,9,1)}
+  else if(co.acc===10){hc.fillStyle=K('#2a2a36');hc.fillRect(hdx-5,hdy-6,10,1);hc.fillRect(hdx-5,hdy-5,2,4);hc.fillRect(hdx-4,hdy-2,3,4);hc.fillStyle=K('#e23b3b');hc.fillRect(hdx-4,hdy-1,1,2);hc.fillStyle=K('#2a2a36');hc.fillRect(hdx-2,hdy+3,5,1);hc.fillStyle=K('#e23b3b');hc.fillRect(hdx+3,hdy+3,1,1)}
   }
   if(!SP&&co.hat)drawHat((x,y,w,h,col)=>{hc.fillStyle=col;hc.fillRect(hdx+x,hdy+y,w,h)},co.hat,K);
   headEmit(c,hc.L,hd.ha,hdx+.5,hdy+3.5,hd.ra,hdx+.5,hdy+hd.py,hd.tx,hd.ty);/* satu pass: kulit -> rambut -> wajah/aksesori */
@@ -3742,7 +3803,7 @@ function netTick(){
 }
 function netClientRender(){/* legacy fallback intentionally disabled */
   const c=ctx;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,VW,canvas.height);c.fillStyle='#0b0b1e';c.fillRect(0,0,VW,canvas.height)}
-function onEdgeFor(f,inp,a){if(state!=='play'||!G||G.phase!=='fight'||f.ai)return;if(a==='lu'||a==='ld'){twLane(f,a==='lu'?-1:1);return}if(a==='c1'||a==='c2'){twCombo(f,a);return}if(a==='ult'){f.useUltimate();return}if(a==='slot'){brUseSlot(f);return}if(BTNS[a]){if((a==='lh'||a==='rh')&&inp.held.lh&&inp.held.rh&&!f.slamIntent()&&f.useUltimate())return;f.pressAttack(a)}else f.pressDir(a)}
+function onEdgeFor(f,inp,a){if(state!=='play'||!G||G.phase!=='fight'||f.ai)return;if(a==='lu'||a==='ld'){twLane(f,a==='lu'?-1:1);return}if(a==='c1'||a==='c2'){twCombo(f,a);return}if(a==='ult'){f.useUltimate();return}if(a==='slot'){brUseSlot(f);return}if(BTNS[a]){/* V138: kombo J+K = ULTI dihapus; ulti hanya lewat tombol ULT / L */f.pressAttack(a)}else f.pressDir(a)}
 function onEdge(a){if(G)onEdgeFor(G.p,Input,a)}
 function onEdge2(a){if(G&&G.vs2)onEdgeFor(G.e,Input2,a)}
 const K2P1={KeyA:'l',KeyD:'r',KeyW:'u',KeyS:'d',KeyF:'lh',KeyG:'rh',KeyR:'lf',KeyT:'rf',KeyE:'ult',KeyQ:'slot'};/* V62: keyboard 2 pemain - P1 */
@@ -4645,6 +4706,19 @@ function drawRoket(c,pr,x,y){const o=pr.o,d=o.face,t=pr.t*30,by=Math.round(o.y);
     c.fillStyle='rgba(255,140,30,.5)';c.fillRect(px-d*3-3,py-14,6,14);c.fillStyle='#ff8a1a';c.fillRect(px-2,py-10,4,10);c.fillStyle='#ffd040';c.fillRect(px-1,py-16,2,8);
     c.fillStyle='#e8eaf2';c.fillRect(px-2,py,4,7);c.fillStyle='#e23b3b';c.fillRect(px-1,py+7,2,3)}
   c.fillStyle='rgba(255,138,30,.25)';c.fillRect(Math.round(x0),by-4,W,5);c.restore()}
+/* V139: JURUS KORBAN (biaya 50% ulti): TAHAN BAWAH+J+K = MODE KILAT (cepat + listrik); TAHAN ATAS+J+K = NAFAS PULIH (regen HP) */
+const KORBAN_COST=50,KL_DUR=6,KL_MOVE=1.45,KL_ATK=1.5,PL_HEAL=10,PL_REGEN=6;
+function korbanFx(f,kl){/* V140: efek aktivasi ala ulti: cut-in, hit-stop, guncangan, cincin, pilar cahaya, petir */
+  const g=G,col=kl?'#70eaff':'#6aff6a',x=f.x,y=f.y,pal=kl?[col,'#ffffff','#ffe66a']:[col,'#b8ffb8','#ffffff'];
+  g.hitStop=Math.max(g.hitStop,.14);g.shake=Math.max(g.shake,kl?11:6);g.stageBurst=Math.max(g.stageBurst||0,.6);vib(60);
+  [[30,.35],[54,.5],[80,.65]].forEach(r=>addP({k:'ring',x,y:y-6,vx:0,vy:0,g:0,life:r[1],max:r[1],z:r[0],col:r[0]>50?col:'#ffffff'}));
+  starFx(x,y-28,'#ffffff',20);starFx(x,y-28,col,14);
+  burst(x,y-24,kl?44:30,pal,kl?260:150,.8,kl?140:-70);puff(x,y,10,1);puff(x,y,10,-1);
+  for(let i=0;i<16;i++)addP({k:'sq',x:x+rnd(-5,5),y:y-i*7,vx:rnd(-8,8),vy:-rnd(70,170),g:-60,life:rnd(.5,.9),max:.9,z:rint(2,3),col:pal[i%3]});
+  if(kl){for(let i=-3;i<=3;i++)boltFx(x+i*20,y-130,x+i*20+rnd(-6,6),y+4,8,7,.35,2);for(let i=0;i<6;i++)boltFx(x+rnd(-10,10),y-rnd(10,40),x+rnd(-48,48),y-rnd(0,60),4,8,.25,2)}
+  else{for(let i=0;i<10;i++){const a=i/10*6.283;addP({k:'star',x:x+Math.cos(a)*26,y:y-28+Math.sin(a)*26,vx:Math.cos(a)*40,vy:Math.sin(a)*40-30,g:-20,life:.5,max:.5,z:rint(3,6),col:i&1?col:'#ffffff'})}}
+  sfx('ultimate');if(!kl)sfx('item');
+  try{kcStart(f);if(KC&&KC.g===g){KC.col=col;KC.rgb=hexRgb(col).join(',');KC.mv=(kl?'MODE KILAT':'NAFAS PULIH')}}catch(e){}}
 const SIS_SEQ=COMBOS.filter(c=>c.seq).sort((a,b)=>b.seq.length-a.seq.length);/* V109: urutan PANGGIL (arah + kombo tangan), yang terpanjang dicek dulu */
 for(const cb of COMBOS){cb.move.name=cb.name;cb.move.cid=cb.id;cb.move.pri=cb.btns.length*2+(cb.dir?1:0)}
 /* STAGE 3: tandai 4 serangan dasar (nrm) + akhir fase hit (he) agar animasi unik hanya berlaku di sini; kombo/ultimate tidak ditandai */
@@ -5238,7 +5312,24 @@ class Fighter{
       for(let i=0;i<n;i++){const e=h[h.length-n+i],w=s[i],k=w==='fwd'?fk:w==='back'?bk:w;if(e.k!==k||(i>0&&e.t-h[h.length-n+i-1].t>SIS_GAP)){ok=false;break}}
       if(ok)return cb}
     return null}
-  tryAttack(btn,fresh){if(fresh===true&&this.ch.id==='siska'&&!this.ai&&!this.isClone&&!(this.clone&&this.clone2)&&G.phase==='fight'){const sq=this.sisSeq(btn);if(sq){
+  korbanTry(btn){/* V139: TAHAN BAWAH/ATAS + J+K bersamaan (hanya pemain) */
+    if(this.ai||this.isClone||(btn!=='lh'&&btn!=='rh')||G.phase!=='fight'||this.stun>0||this.state==='down'||this.fin||this.weapon||this.ws||this.gb)return false;
+    const now=G.time,h=this.hist.filter(e=>!e.u),n=h.length;if(n<2)return false;
+    const x=h[n-2],y=h[n-1];
+    if(y.k!==btn||(x.k!=='lh'&&x.k!=='rh')||x.k===y.k||y.t-x.t>.15)return false;
+    const down=this.dirOK('down'),up=this.dirOK('up');if(down===up)return false;/* harus tepat satu arah */
+    const a=this.attack;if(a&&(a.t>.2||a.conn))return false;/* boleh membatalkan pukulan biasa yang baru mulai */
+    if(!a&&this.cd>0)return false;
+    const say=t=>{if(!(this.kbMsg>now)){this.kbMsg=now+.8;floatText(this.x,this.y-58,t,'#ff8a8a')}};
+    if((this.ult||0)<KORBAN_COST){say('ULTI KURANG (50%)');return false}
+    if(down&&this.klT>0){say('KILAT MASIH AKTIF');return false}
+    if(up&&this.hp>=hpMax(this)-3){say('HP SUDAH PENUH');return false}
+    x.u=y.u=true;this.ult=Math.max(0,this.ult-KORBAN_COST);this.buf=null;
+    this.attack=null;this.cd=.2;this.low=false;this.slideT=0;this.dashT=0;this.crouch=false;
+    if(down){this.klT=KL_DUR;G.pop={text:'MODE KILAT!',t:0,col:'#70eaff',who:this};floatText(this.x,this.y-46,'-50% ULTI','#70eaff');korbanFx(this,true)}
+    else{this.hp=Math.min(hpMax(this),this.hp+PL_HEAL);if(this.trail<this.hp)this.trail=this.hp;this.rgT=Math.max(this.rgT||0,PL_REGEN);this.plT=PL_REGEN;G.pop={text:'NAFAS PULIH!',t:0,col:'#6aff6a',who:this};floatText(this.x,this.y-46,'+HP  -50% ULTI','#6aff6a');korbanFx(this,false)}
+    return true}
+  tryAttack(btn,fresh){if(fresh===true&&this.korbanTry(btn))return;if(fresh===true&&this.ch.id==='siska'&&!this.ai&&!this.isClone&&!(this.clone&&this.clone2)&&G.phase==='fight'){const sq=this.sisSeq(btn);if(sq){
       if(G.time<(this.sisCd||0)){if(!(this.sisMsg>G.time)){this.sisMsg=G.time+.6;floatText(this.x,this.y-58,'COOLDOWN '+Math.ceil(this.sisCd-G.time),'#ffffff')}}
       else{this.hist.length=0;this.attack=null;this.cd=0;this.buf=null;this.low=false;this.startMove(sq.move,sq);return}}}
   if(this.ctapTry(btn,fresh)||this.s4Try(btn,fresh)||this.s5Try(btn,fresh)||this.s6Try(btn,fresh)||this.s9Try(btn,fresh))return;
@@ -5637,15 +5728,9 @@ class Fighter{
   takeHit(att,h,m,rect){
     if(!this.canBeHit()&&!this.tireOK)return;
     if(this.sci&&(h.ult||(m&&m.sfx==='ultimate')))this.sci=null;/* kena ulti/sinematik lain: gunting menempel dibersihkan */
-    if(this.shT>0){this.shHT=(this.shHT||0);if(G.time-this.shHT>.4){this.shHT=G.time;floatText(this.x,this.y-42,'BLOK','#70eaff');burst(this.x,this.y-22,8,['#70eaff','#ffffff'],110,.3,0);sfx('item')}return}
     if(this.frT>0){this.frT=0;floatText(this.x,this.y-44,'ES PECAH!','#9fe8ff');burst(this.x,this.y-20,20,['#9fe8ff','#ffffff','#40f0ff'],170,.5,120);sfx('item')}/* ITEM T6: kena pukul = es hancur */
     const dir=att.x<=this.x?1:-1;
     let dmg=h.dmg*att.ch.dmg*((h.sword&&att.weapon==='sword')?1.5:1)*this.ch.def*(att.ai?(att.pow||1):1)*(this.ai?(this.dm||1):1)*(this.bd||1)*(att.bo||1)*(att.dbT>0?ITEM_CFG.dmgMul:1);
-    // PERFECT PARRY: tanpa damage, tidak dihitung kombo, penyerang kena stun
-    if(this.guard&&this.parryT>0){this.pkT=.25;this.parryT=0;this.guard=false;this.stun=0;this.ult=Math.min(100,(this.ult||0)+10);att.attack=null;att.cn=null;att.dbW=0;att.stun=Math.max(att.stun,.48);att.vx=-dir*105;att.flash=.18;starFx(this.x,this.y-22,'#70eaff',12);burst(this.x,this.y-22,18,['#70eaff','#ffffff','#b5f4ff'],190,.55,180);G.shake=Math.max(G.shake,3);floatText(this.x,this.y-42,'PERFECT PARRY','#70eaff');G.hitStop=.08;sfx('click');this.s6Ctr('parry',att);return}
-    // GUARD biasa: damage hanya 25%, tidak dihitung kombo / finisher
-    if(this.guard&&h.gbreak){this.guard=false;this.guardHold=0;this.guardHit=0;dmg=Math.max(1,Math.round(dmg*.5));this.hp=Math.max(0,this.hp-dmg);this.stun=.45;this.vx=dir*130;this.flash=.14;this.attack=null;this.buf=null;att.ult=Math.min(100,att.ult+6);starFx(this.x,this.y-22,'#ffa040',12);burst(this.x,this.y-22,16,['#ffa040','#ffffff','#ffd040'],190,.5,160);floatText(this.x,this.y-42,'GUARD BREAK','#ffa040');G.shake=Math.max(G.shake,5);G.hitStop=Math.max(G.hitStop,.09);sfx('punch');if(this.hp<=0){this.state='down';this.downT=999;endRound(att,this,'ko')}return true}
-    if(this.guard&&!h.grab){this.guardHit=.14;dmg=Math.max(1,Math.round(dmg*.25));this.hp=Math.max(0,this.hp-dmg);this.flash=.08;this.vx=dir*35;starFx(this.x,this.y-20,'#70aaff',6);burst(this.x,this.y-20,5,['#70aaff','#d8f5ff'],85,.25,100);floatText(this.x,this.y-35,'GUARD','#9fd8ff');this.s6Ctr('guard',att);if(this.hp<=0){this.state='down';this.downT=999;endRound(att,this,'ko')}return}
     att.comboHits=att.comboTimer>0?att.comboHits+1:1;att.comboTimer=1.35;if(att.comboHits===3||att.comboHits===4){floatText(att.x,att.y-58,'COMBO X'+att.comboHits,'#ffd040');att.ult=Math.min(100,att.ult+2)}/* TAHAP 3: combo bertingkat */att.ult=Math.min(100,(att.ult||0)+((h.lsp&&!h.fin||h.ub||h.ult||(m&&m.sfx==='ultimate'))?0:(att.bu||9)));if(!this.onG){att.airHits=(att.airHits||0)+1;if(att.airHits>=2){G.pop={text:'AIR COMBO X'+att.airHits,t:0,col:'#70eaff',who:att};G.hitStop=Math.max(G.hitStop,.045);att.ult=Math.min(100,att.ult+5)}}else att.airHits=0;
     if(h.lsp)att.comboHits=0;const finisher=att.comboHits>=5&&!h.ub&&!h.ult&&!(m&&m.sfx==='ultimate');/* V62: hit tengah ULTIMATE (ub) tidak memicu finisher/knockdown dini */
     if(finisher)dmg*=1.7;
@@ -6089,7 +6174,7 @@ function aiReact(f,o,C,A){
     if(!f.onG||f.attack){A.rmode=null}
     else if(oa.t<=hitEnd(mv)+.12){
       A.dx=0;A.moveT=0;A.hold='back';A.holdT=.12;
-      if(A.rmode==='parry'&&h&&oa.t>=h.at-.1&&oa.t<=h.at+.1&&f.parryT<=0)f.parryT=.22;
+      
       return;
     }else A.rmode=null;
   }
@@ -6184,7 +6269,7 @@ const SES={adit:0,waluyo:0,spiderman:0,ninja:0,sari:0,laras:0,maya:0,lios:0,sisk
 const isTouch=('ontouchstart' in window)||(navigator.maxTouchPoints>0)||(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
 
 function mirrorCos(base){
-  const co=Object.assign({},base),i=(base.outfit+1)%OUTFITS.length;
+  const co=Object.assign({},base),i=(base.outfit+1)%10;
   co.outfit=i;co.shirt=OUTFITS[i].shirt;co.shorts=OUTFITS[i].shorts;
   co.gloves=(base.gloves||'').toLowerCase()==='#2f6fe4'?'#e23b3b':'#2f6fe4';
   co.shoes=base.shoes==='#14141e'?'#8a5a30':'#14141e';
@@ -6260,7 +6345,7 @@ function trainAct(a){
   else if(a==='tr-ult'){g.p.ult=100;toast('ULT PENUH')}
   else if(a==='tr-auto'){g.auto=!g.auto}
   else if(a==='tr-ohk'){trainOHK=!trainOHK;toast('1 HIT KILL: '+(trainOHK?'ON':'OFF'))}
-  else if(a==='tr-dummy'){const o=['DIAM','GUARD','AI'];g.dummy=o[(o.indexOf(g.dummy)+1)%3]}
+  else if(a==='tr-dummy'){const o=['DIAM','AI'];g.dummy=o[(o.indexOf(g.dummy)+1)%2]}
   else if(a==='tr-dist'){const o=[50,120,220];g.dist=o[(o.indexOf(g.dist)+1)%3];trainReset()}
   else if(a==='tr-reset'){trainReset()}
   else if(a==='tr-prev'||a==='tr-next'){{const op=selOrder();trainSwitch(op[(op.indexOf(g.sel)+(a==='tr-next'?1:-1)+op.length)%op.length])};return}
@@ -6279,7 +6364,7 @@ function trainTick(g,dt){
   if(g.auto){
     if(p.ult<100&&!p.attack)p.ult=100;
     if(g.keepW&&!p.weapon&&!p.attack&&p.stun<=0){p.weapon=g.keepW;p.wT=999;p.ammo=g.keepW==='gun'?99:0;p.dsT=0}}
-  if(g.dummy!=='AI'){const c=e.ctl;c.l=c.r=c.u=c.d=0;if(g.dummy==='GUARD'){if(e.face>0)c.l=1;else c.r=1}}
+  if(g.dummy!=='AI'){const c=e.ctl;c.l=c.r=c.u=c.d=0;}
 }
 function newRound(){
   const g=G;g.p.clone=null;g.e.clone=null;g.p.clone2=null;g.e.clone2=null;g.p.hold=0;g.e.hold=0;const u1=g.p.ult||0,u2=g.e.ult||0;g.p.reset(startX(1),1);g.e.reset(startX(0),-1);g.p.ult=u1;g.e.ult=u2;{const C_=AI_CFG[g.sdiff||S.diff]||AI_CFG.NORMAL;g.e.spd=C_.spd;g.e.pow=C_.pow;g.e.dm=C_.dm;if(g.vs2){g.e.spd=1;g.e.pow=1;g.e.dm=1}g.p.bd=g.baby?.55:1;g.p.bo=g.baby?1.5:1;g.p.bu=g.baby?20:(g.p.ch.id==='siska'?25:9);if(g.story){const st=g.story;g.e.dm*=(st.eDm||1);if(st.pHp){g.p.hp=g.p.trail=st.pHp}if(st.pUlt&&g.round===1)g.p.ult=st.pUlt}}
@@ -6308,9 +6393,17 @@ function showResult(){
   if(st){$('resSes').textContent='CHAPTER '+(storyCh+1);if(pw)storyWin()}}
   sfx('win');go('result');
 }
+const WIDE_ZMIN=.7;/* zoom-out terjauh kamera luas (70%) */
+function wideOk(g){return S.wideCam!==false&&!g.split&&!g.hc&&g.map!=='moon'&&!BXM(g.map)&&!g.posMode}
 function camUpdate(dt,snap){
   const g=G,tgt=clamp((hsX(g.p)+hsX(g.e))/2-VW/2,0,WORLD_W-VW);
   g.cam=snap?tgt:g.cam+(tgt-g.cam)*Math.min(1,dt*10);
+  /* KAMERA LUAS: zoom-out otomatis mengikuti jarak kedua petarung; jarak maksimum dibatasi supaya keduanya selalu terlihat */
+  {const ok=wideOk(g),act=ok&&(g.phase==='fight'||g.phase==='intro');
+   if(act&&!snap&&g.phase==='fight'&&!hsPoss(g.p)&&!hsPoss(g.e)){const a=g.p,b=g.e,lim=VW/WIDE_ZMIN-130,dx=a.x-b.x,ad=Math.abs(dx);if(ad>lim){const sg=dx>0?1:-1,ex=(ad-lim)/2;a.x-=sg*ex;b.x+=sg*ex;if(a.vx*sg>0)a.vx=0;if(b.vx*sg<0)b.vx=0}}
+   const mid=(hsX(g.p)+hsX(g.e))/2,d=Math.abs(hsX(g.p)-hsX(g.e)),Zt=act?VW/clamp(d+240,VW*1.12,VW/WIDE_ZMIN):1;
+   g.zW=(snap||g.zW===undefined)?Zt:g.zW+(Zt-g.zW)*Math.min(1,dt*2.5);
+   g.wcx=(snap||g.wcx===undefined)?mid:g.wcx+(mid-g.wcx)*Math.min(1,dt*8)}
   /* V64 SPLIT-SCREEN: kamera independen per pemain (hanya dipakai render; kamera global g.cam tetap untuk logika/batas arena) */
   {/* V67: kamera tiap strip = ikut karakternya sendiri, sedikit condong ke lawan, zoom otomatis menyesuaikan jarak agar KEDUA petarung tetap terlihat.
       cam1/cam2 = sisi kiri viewport (dunia), z1/z2 = zoom, cy1/cy2 = sisi atas viewport. Zoom maksimum naik seiring tinggi strip (SH). */
@@ -6377,7 +6470,7 @@ function drawItemCountdown(c,g){
 const ITEM_FALL_H=220,ITEM_FALL_V=100;/* ITEM T1: tinggi & kecepatan jatuh peti parasut (px, px/dt) - deterministik, hanya mode non-BR */
 function spawnItem(at){
   const g=G,types=['vamp','spring','poison','heal','speed','copy','rand'],wts=[.2,.18,.16,.13,.13,.1,.1];/* V88: pedang/pistol/cakram diganti vampir/pegas/asap racun */
-  if(g.hc&&g.hc.k==='br'){types.push('shield','trap','magnet','revive');wts.push(.12,.1,.1,.07);wts[3]=.26}/* V86: item baru khusus BR */
+  if(g.hc&&g.hc.k==='br'){types.push('trap','magnet','revive');wts.push(.1,.1,.07);wts[3]=.26}/* V86: item baru khusus BR */
   if(!(g.hc&&g.hc.k==='br')){types.push('dmg','frz');wts.push(.1,.1);types.push('regen','rage','swap','bomb','zap','ghost');wts.push(.14,.11,.1,.1,.08,.08)}/* ITEM UNIK: 6 item baru khusus 1v1 *//* ITEM T6: item baru khusus 1v1 */
   if(!(g.hc&&g.hc.k==='br')){const bh=itemBehind(g);if(bh)for(let i=0;i<types.length;i++)wts[i]*=1+((ITEM_CFG.boost[types[i]]||1)-1)*bh.k}/* ITEM T3: bobot pengejar ketinggalan */
   if(!(g.hc&&g.hc.k==='br'))for(let i=0;i<types.length;i++)wts[i]*=ITEM_CFG.rarW[ITEM_CFG.rarOf[types[i]]||0];/* ITEM T4: tingkat kelangkaan */
@@ -6420,7 +6513,7 @@ function pickItem(f,it){
   else if(it.type==='zap'){const o=oppOf(f);if(o&&o.hp>0){const _d=Math.min(15,o.hp-1);o.hp-=_d;o.stun=Math.max(o.stun||0,.6);if(o.frT>0)o.frT=0;floatText(o.x,o.y-44,'PETIR! -'+Math.round(_d),'#ffe030');for(let k=0;k<7;k++)burst(o.x+rnd(-4,4),o.y-8-k*10,5,['#ffe030','#ffffff','#80d0ff'],110,.35,0);G.shake=Math.max(G.shake,4);sfx('item')}else floatText(f.x,f.y-44,'PETIR!','#ffe030')}
   else if(it.type==='ghost'){f.ghT=4;floatText(f.x,f.y-44,'HANTU! KEBAL 4 DTK','#d8d8ff');burst(f.x,f.y-20,14,['#d8d8ff','#ffffff'],90,.6,-40)}
   else if(it.type==='revive'){if(f.rv>0)floatText(f.x,f.y-44,'SUDAH PUNYA NYAWA EXTRA','#ffffff');else{f.rv=1;floatText(f.x,f.y-44,'NYAWA EXTRA!','#ffe070')}}
-  else if(it.type==='shield'){f.shT=6;floatText(f.x,f.y-44,'PERISAI!','#70eaff')}
+  else if(it.type==='shield'){void 0}
   else if(it.type==='magnet'){f.mgT=8;floatText(f.x,f.y-44,'MAGNET!','#ff7aa0')}
   else if(it.type==='trap'){g.traps=g.traps||[];g.traps.push({x:f.x,y:groundBelow(f.x,f.y),o:f,t:0,life:30});floatText(f.x,f.y-44,'JEBAKAN DIPASANG','#ffffff')}
   else{f.boost=8;floatText(f.x,f.y-44,'SPEED UP!','#60d0ff')}
@@ -6765,9 +6858,8 @@ function update(dtIn){
     if(pr.boom){if(!pr.rev&&pr.t>.45){pr.rev=1;pr.done=0;pr.h=pr.h2;if(pr.wave===2)fireTurn(pr)}if(pr.rev){const dx=pr.o.x-pr.x;pr.vx=Math.sign(dx||1)*300;pr.y+=((pr.o.y-22)-pr.y)*Math.min(1,dt*6);if(Math.abs(dx)<12){dead=true;if(pr.wave===2)fireCatch(pr)}}}
     if(pr.wave===2){flameFx(pr.x-(Math.sign(pr.vx)||1)*5,pr.y+rnd(-5,5),pr.rev?3:2,5,pr.rev?5:4);if(rand()<.5)burst(pr.x,pr.y+rnd(-9,9),1,['#ffd040','#fff2b0','#ff5a14'],80,.35,-50)}
     if((pr.wave===1||pr.wave===3)&&rand()<.9){const cl=pr.wave===3?['#bfe8ff','#ffffff','#70eaff']:['#ffe9a0','#ffffff','#bfe8ff'];burst(pr.x-pr.f*4,pr.y+rnd(-24,24),2,cl,40,.4,-30);if(rand()<.18)starFx(pr.x-pr.f*6,pr.y+rnd(-22,22),'#ffffff',3)}
-    if(!dead&&!pr.wave&&tg.weapon==='disc'&&Math.abs(pr.x-tg.x)<20&&Math.abs(pr.y-(tg.y-22))<18){dead=true;burst(pr.x,pr.y,6,['#c8e0ff','#ffffff'],90,.3,0);floatText(tg.x,tg.y-44,'BLOCK','#c8e0ff');sfx('click')}
     const pw=pr.w||6,ph=pr.hh||6;
-    if(!dead&&pr.web&&tg.canBeHit()&&!(tg.webT>0)&&!(tg.webImm>0)&&ov({x:pr.x-pw/2,y:pr.y-ph/2,w:pw,h:ph},tg.hurt())){dead=true;if(tg.guard){floatText(tg.x,tg.y-44,'BLOCK','#c8e0ff');burst(pr.x,pr.y,6,['#ffffff','#c8e0ff'],80,.3,0);sfx('click')}else tg.webBind(pr.o,pr.bt||.9)}
+    if(!dead&&pr.web&&tg.canBeHit()&&!(tg.webT>0)&&!(tg.webImm>0)&&ov({x:pr.x-pw/2,y:pr.y-ph/2,w:pw,h:ph},tg.hurt())){dead=true;tg.webBind(pr.o,pr.bt||.9)}
     if(!dead&&!pr.done&&!pr.web&&(tg.canBeHit()||(pr.tire&&tg.state==='down'&&tg.hp>0&&!tg.fin&&tg.inv<=0&&G.phase==='fight'))&&ov({x:pr.x-pw/2,y:pr.y-ph/2,w:pw,h:ph},tg.hurt())){const _sg=pr.scis&&!tg.guard&&!(tg.shT>0);tg.tireOK=pr.tire?1:0;tg.takeHit(pr.o,pr.h||{dmg:7,kb:90,stun:.24},{sfx:'punch'},{x:pr.x-1,y:pr.y-1,w:3,h:3});tg.tireOK=0;if(_sg&&tg.hp>0)sciStick(tg,pr);if(pr.wave===2)fireHit(pr.x,pr.y,!!pr.rev);if(pr.ball){pr.done=1;pr.vx=-Math.sign(pr.vx||1)*(pr.big?90:130);pr.vy=pr.big?-300:-230}else if(pr.pierce)pr.done=1;else dead=true}
     if(!dead&&!pr.web&&g.hc&&g.hc.ent&&twProj(pr,pw,ph))dead=true;/* TOWER: proyektil kena tower/minion */
     /* TAHAP 7.3: peti kayu Pelabuhan bisa pecah oleh proyektil (sekali per peti; proyektil tembus tidak berhenti) */
@@ -6977,9 +7069,24 @@ function drawWorld(g,c){
 function drawGame(){
   const g=G,c=ctx;
   if(g.split){drawSplit(g,c);return}
-  drawWorld(g,c);
+  {const Zw=wideZ(g);if(Zw<.995)drawWorldWide(g,c,Zw);else drawWorld(g,c)}
   drawHUD(c,g);
   {const W=g.phase==='end'?g.resW:g.phase==='ko'?g.rw:null;if(W&&W.fin==='win'&&W.ch.id==='waluyo'&&W.jt>=.1)drawJos(c,g,W)}
+}
+/* KAMERA LUAS: dunia digambar dengan skala <1 (alas tetap di bawah), VW sementara diperlebar agar culling ikut melebar,
+   lapisan latar yang kurang lebar disambung cermin, dan langit di bagian atas diperpanjang. */
+function wideZ(g){if(!wideOk(g)||g.zW===undefined||g.zW>=.995)return 1;const kk=Math.max((g.uc&&g.uc.k)||0,(g.vz&&g.vz.k)||0),w=clamp(kk*3,0,1);return g.zW+(1-g.zW)*w}
+function drawWorldWide(g,c,Z){
+  const gc=g.cam,VW0=VW,Vx=Math.round(VW0/Z),kk=Math.max((g.uc&&g.uc.k)||0,(g.vz&&g.vz.k)||0),w=clamp(kk*3,0,1),
+    cw=clamp((g.wcx!==undefined?g.wcx:gc+VW0/2)-Vx/2,0,Math.max(0,WORLD_W-Vx)),cam2=cw+(gc-cw)*w,tb=Math.ceil(VH*(1-Z)),orig=CanvasRenderingContext2D.prototype.drawImage;
+  c.save();c.translate(0,VH-VH*Z);c.scale(Z,Z);
+  g.cam=cam2;VW=Vx;
+  c.drawImage=function(img,dx,dy,dw,dh){const n=arguments.length;orig.apply(this,arguments);
+    if((n===3||n===5)&&img&&img.width>=VW0*.85&&img.height>=VH*.45){const iw=n===5?dw:img.width,ih=n===5?dh:img.height,e=dx+iw;
+      if(e<VW-.5&&e>VW0*.4){this.save();this.translate(e+iw,dy);this.scale(-1,1);orig.call(this,img,0,0,iw,ih);this.restore()}}};
+  try{drawWorld(g,c)}finally{g.cam=gc;VW=VW0;delete c.drawImage}
+  c.restore();
+  if(tb>0)c.drawImage(canvas,0,tb,canvas.width,1,0,0,canvas.width,tb);
 }
 /* ---------- V64: TRUE SPLIT-SCREEN ATAS-BAWAH (2 viewport game, 1 Game State, 1 canvas) ----------
    Canvas 480x270 dibagi dua strip 480x135: P1 di bawah, P2 di atas. Tiap strip menggambar dunia penuh dengan kamera
@@ -8031,7 +8138,7 @@ function ceMoveHTML(p,m,isUlt){
     (m.hits.length>1?'<button class="btn sm gray" data-a="delhit" data-p="'+p+'" data-i="'+i+'">HAPUS</button>':'')+'</div>'});
   if(m.hits.length<(isUlt?CE_UHITMAX:CE_HITMAX))s+='<button class="btn sm blue" data-a="addhit" data-p="'+p+'">+ HIT</button>';
   return s}
-const CE_SW={skin:SKINS,hair:['#241410','#5a3418','#a0622a','#e8c060','#d8d8e8','#e23b3b','#2f6fe4','#d058c8','#3a3a52','#f4f4f4'],other:PAL};
+const CE_SW={skin:SKINS,hair:['#241410','#7a4a26','#a0622a','#e8c060','#d8d8e8','#e23b3b','#2f6fe4','#d058c8','#3a3a52','#f4f4f4'],other:PAL};
 function ceSw(l,p,v,list){v=String(v).toLowerCase();let on=0;let h='<div class="cesw"><span class="l">'+l+'</span>'+list.map(x=>{const q=x.toLowerCase()===v;if(q)on=1;return '<button class="sw'+(q?' on':'')+'" style="background:'+x+'" data-a="sw" data-p="'+p+'" data-v="'+ceEsc(x)+'" title="'+ceEsc(x)+'"></button>'}).join('');
   return h+'</div>'}
 function ceThumb(c,mod,crop){const ch=Object.assign({},CHARS[c.id]),co=Object.assign({},COS[c.id]);mod(ch,co);
@@ -8325,7 +8432,7 @@ let trainPick=false,lastPick='foe';/* sisi yang terakhir ditekan = sisi yang ber
 function refreshSelect(){
   const ch=CHARS[selId],foe=CHARS[foeSelId];{const sb=$('btnSort');if(sb)sb.textContent='URUT: '+SORT_N[selSort]}
   $('selName').textContent=ch.name;$('foeName').textContent=foe.name;
-  const stats=(el,c)=>{const lab=['POWER','SPEED','GUARD'];el.innerHTML=lab.map((l,i)=>'<div class="stat"><span>'+l+'</span><b>'+[0,1,2,3,4].map(k=>'<i class="'+(k<c.stats[i]?'on':'')+'"></i>').join('')+'</b></div>').join('')};
+  const stats=(el,c)=>{const lab=['POWER','SPEED','DEF'];el.innerHTML=lab.map((l,i)=>'<div class="stat"><span>'+l+'</span><b>'+[0,1,2,3,4].map(k=>'<i class="'+(k<c.stats[i]?'on':'')+'"></i>').join('')+'</b></div>').join('')};
   stats($('selStats'),ch);stats($('foeStats'),foe);
   {const nt=!!(NET.role&&NET.conn&&!trainPick),b=$('btnMode');b.style.display=(trainPick||nt)?'none':'';b.textContent=vs2p?'LAWAN: PLAYER 2':'LAWAN: AI';b.classList.toggle('gold',!vs2p);b.classList.toggle('green',vs2p);$('foeHead').textContent=nt?(NET.role==='host'?'PLAYER 2 (TEMAN)':'LAWAN (HOST)'):((vs2p&&!trainPick)?'PILIH PLAYER 2':'PILIH MUSUH');document.querySelectorAll('#sc-select [data-act="foe-prev"]:not(canvas),#sc-select [data-act="foe-next"]:not(canvas)').forEach(e=>{e.style.visibility=nt?'hidden':''});{const fp=$('fPortrait');if(fp){fp.style.visibility='';fp.style.pointerEvents=nt?'none':''}}const ta=document.querySelector('#sc-select [data-act="to-arena"]');if(ta)ta.textContent=(nt&&NET.role==='client')?'MENUNGGU HOST...':'PILIH ARENA >';const nb=$('netModeBtn');if(nb){nb.style.display=nt?'':'none';nb.textContent='MODE: '+['1V1','2V2','3V3','BATTLE ROYALE','AUTO BATTLE 1V1'][NET.hcMode|0]}}
 }
@@ -8338,10 +8445,10 @@ function refreshArena(){
 }
 
 const PARTS=[['skin','KULIT'],['outfit','BAJU'],['acc','AKSESORIS'],['hat','TOPI']];
-const ACC_IDS=[0,1,3,4,5];                       /* aksesoris wajah/leher/kepala-band (CAP pindah ke tab TOPI) */
+const ACC_IDS=[0,1,3,4,5,6,7,8,9,10,11,12];                       /* aksesoris wajah/leher/kepala-band (CAP pindah ke tab TOPI) */
 const HEAD_NAMES=['TANPA','CAP',...HATS.slice(1)];/* slot kepala: 0 tanpa, 1 cap (acc 2), 2.. topi */
-const HEAD_DESC=['Tanpa penutup kepala.','Cap sederhana, warnanya mengikuti celana.','Topi baseball gelap dengan lidah depan.','Beanie hangat bergaya streetwear.','Mahkota emas khas juara.','Helm baja pelindung kepala.','Top hat klasik berpita merah.','Topi seragam SD merah, agak tinggi dan kecil.'];
-const ACC_DESC={0:'Tanpa aksesoris.',1:'Ikat kepala merah dengan ekor berkibar.',3:'Kacamata hitam untuk gaya santai.',4:'Syal panjang yang berkibar saat bergerak.',5:'Lencana bintang emas di dada.'};
+const HEAD_DESC=['Tanpa penutup kepala.','Cap sederhana, warnanya mengikuti celana.','Topi baseball gelap dengan lidah depan.','Beanie hangat bergaya streetwear.','Mahkota emas khas juara.','Helm baja pelindung kepala.','Top hat klasik berpita merah.','Topi seragam SD merah, agak tinggi dan kecil.','Topi kowboi bertepi lebar dengan pita coklat.','Caping bambu kerucut khas petani.','Peci hitam klasik berhias garis emas.','Blangkon batik khas Jawa dengan sanggul belakang.','Topi penyihir ungu runcing bertabur bintang.','Topi koki putih menggembung.','Helm viking bertanduk.','Bando kuping kucing, imut tapi galak.'];
+const ACC_DESC={0:'Tanpa aksesoris.',1:'Ikat kepala merah dengan ekor berkibar.',3:'Kacamata hitam untuk gaya santai.',4:'Syal panjang yang berkibar saat bergerak.',5:'Lencana bintang emas di dada.',6:'Masker medis penutup mulut.',7:'Kalung rantai emas berliontin.',8:'Jubah merah yang berkibar di punggung.',9:'Penutup mata ala bajak laut.',10:'Headset gaming dengan mic.',11:'Tas punggung biru dengan tali.',12:'Sayap putih mungil yang mengepak.'};
 const THUMB_CV=document.createElement('canvas');THUMB_CV.width=96;THUMB_CV.height=120;
 /* thumbnail = potongan render karakter ASLI dengan item itu, jadi kartu pilihan pasti sama dengan yang tampil di preview */
 function thumbURL(id,ov,part){
@@ -8356,7 +8463,7 @@ function setHead(co,i){if(i===1){co.hat=0;co.acc=2}else{co.hat=i>=2?i-1:0;if(co.
 function costumeItems(co,k){
  const mk=(o,part,extra)=>Object.assign({part,active:false,set(){o.ov(co)}},o,extra);
  if(k==='skin')return SKINS.map((v,i)=>mk({name:'KULIT '+(i+1),desc:'Pilih warna kulit petarung.',ov:c=>{c.skin=v}},'head',{active:co.skin===v}));
- if(k==='outfit')return OUTFITS.map((o,i)=>mk({name:o.name,desc:o.desc,ov:c=>{c.outfit=i;c.shirt=o.shirt;c.shorts=o.shorts}},'outfit',{active:co.outfit===i}));
+ if(k==='outfit'){const ids=OUTFITS.map((o,i)=>i).filter(i=>!OUTFITS[i].only||OUTFITS[i].only===cosChar);ids.sort((a,b)=>(OUTFITS[b].only===cosChar)-(OUTFITS[a].only===cosChar));return ids.map(i=>{const o=OUTFITS[i];return mk({name:o.name,desc:o.desc,ov:c=>{c.outfit=i;c.shirt=o.shirt;c.shorts=o.shorts}},'outfit',{active:co.outfit===i})})}
  if(k==='acc')return ACC_IDS.map(v=>mk({name:ACC[v],desc:ACC_DESC[v],ov:c=>{c.acc=v}},'head',{active:co.acc===v}));
  return HEAD_NAMES.map((n,i)=>mk({name:n,desc:HEAD_DESC[i],ov:c=>setHead(c,i)},'head',{active:headIdx(co)===i}));
 }
@@ -8399,6 +8506,7 @@ const SET_ROWS=[
  {k:'ctrlSize',l:'UKURAN KONTROL',t:'range',min:.7,max:1.5,step:.05,f:v=>Math.round(v*100)+'%'},
  {k:'ctrlOpa',l:'OPASITAS TOMBOL',t:'range',min:.2,max:1,step:.05,f:v=>Math.round(v*100)+'%'},
  {k:'ctrlKof',l:'CUT-IN ULTI',t:'tog'},
+ {k:'wideCam',l:'KAMERA LUAS (ZOOM OTOMATIS)',t:'tog'},
  {k:'lr2pb',l:'LAYAR 2P KIRI-KANAN (EKSPERIMEN)',t:'tog'},
  {k:'fx',l:'EFEK VISUAL',t:'cyc',o:['FULL','LOW','OFF']}];
 function buildSettingsUI(){
@@ -8545,7 +8653,7 @@ function onClick(e){
    case 'cos-prev':cosStep(-1);refreshCostume();break;
    case 'cos-next':cosStep(1);refreshCostume();break;
    case 'cos-choice':{const it=costumeItems(COS[cosChar],PARTS[cosPart][0])[+v];if(it)it.set();refreshCostume();break}
-   case 'cos-rand':{const co=COS[cosChar];co.skin=SKINS[rint(0,SKINS.length-1)];co.outfit=rint(0,OUTFITS.length-1);co.shirt=OUTFITS[co.outfit].shirt;co.shorts=OUTFITS[co.outfit].shorts;co.acc=ACC_IDS[rint(0,ACC_IDS.length-1)];setHead(co,rint(0,HEAD_NAMES.length-1));refreshCostume();break}
+   case 'cos-rand':{const co=COS[cosChar];co.skin=SKINS[rint(0,SKINS.length-1)];{const ok=OUTFITS.map((o,i)=>i).filter(i=>!OUTFITS[i].only||OUTFITS[i].only===cosChar);co.outfit=ok[rint(0,ok.length-1)]}co.shirt=OUTFITS[co.outfit].shirt;co.shorts=OUTFITS[co.outfit].shorts;co.acc=ACC_IDS[rint(0,ACC_IDS.length-1)];setHead(co,rint(0,HEAD_NAMES.length-1));refreshCostume();break}
    case 'cos-reset':Object.assign(COS[cosChar],DEF_COS[cosChar]);refreshCostume();toast('RESET!');break;
    case 'cos-save':if(LS.set('pf_costume_v1',COS))toast('TERSIMPAN!');break;
    case 'set-tog':{const r=SET_ROWS[+v];S[r.k]=!S[r.k];applySettings();refreshSettings();break}
@@ -9231,7 +9339,7 @@ function autoSynCount(fs){const c={k:0,l:0,p:0};for(const f of fs)if(f.team===0)
 function autoSynText(g){const c=autoSynCount(g.hc.fs),n=c.k+c.l+c.p;return Object.keys(AUTO_CLS).map(k=>AUTO_CLS[k].n+' '+c[k]+'/'+(c[k]>=3?3:2)+(c[k]>=3?' ★★':c[k]>=2?' ✔':'')).join(' · ')+' · '+(c.k&&c.l&&c.p?'3 KELAS +5% · ':'')+(n>=5?'SQUAD +20%':n>=3?'TRIO +10%':'TIM 3 HERO = +10%')}
 const AUTO_UP=[{k:'up',n:'BAJA',d:'HP +35, TERIMA DAMAGE -8%'},{k:'at',n:'SERANGAN',d:'DAMAGE +12%'},{k:'sp',n:'LAJU',d:'KECEPATAN +5%'}],AUTO_UP_MAX=5;
 const AUTO_TAC=[{n:'SERANG',d:'damage keluar +15%, damage diterima +12%'},{n:'SEIMBANG',d:'tanpa perubahan'},{n:'BERTAHAN',d:'damage keluar -8%, damage diterima -18%'}];
-const AUTO_ITEMS=[{id:'dmg',n:'DAMAGE',c:6,d:'damage ganda 8 detik di awal ronde'},{id:'vamp',n:'VAMPIR',c:6,d:'curi HP 8 detik'},{id:'shield',n:'PERISAI',c:5,d:'kebal 6 detik'},{id:'ult',n:'ULTI',c:7,d:'ulti langsung penuh'},{id:'heal',n:'POTION',c:4,d:'otomatis +45 HP saat HP di bawah 40%'},{id:'speed',n:'SPEED',c:4,d:'lari lebih cepat 8 detik'},{id:'sword',n:'PEDANG',c:6,d:'pedang 12 detik, jangkauan & damage tebasan naik'},{id:'gun',n:'PISTOL',c:7,d:'pistol 14 detik, tembak jarak jauh'},{id:'disc',n:'CAKRAM',c:6,d:'cakram 14 detik, tangkis proyektil & lukai lawan dekat'}];
+const AUTO_ITEMS=[{id:'dmg',n:'DAMAGE',c:6,d:'damage ganda 8 detik di awal ronde'},{id:'vamp',n:'VAMPIR',c:6,d:'curi HP 8 detik'},{id:'ult',n:'ULTI',c:7,d:'ulti langsung penuh'},{id:'heal',n:'POTION',c:4,d:'otomatis +45 HP saat HP di bawah 40%'},{id:'speed',n:'SPEED',c:4,d:'lari lebih cepat 8 detik'},{id:'sword',n:'PEDANG',c:6,d:'pedang 12 detik, jangkauan & damage tebasan naik'},{id:'gun',n:'PISTOL',c:7,d:'pistol 14 detik, tembak jarak jauh'},{id:'disc',n:'CAKRAM',c:6,d:'cakram 14 detik, lukai lawan dekat'}];
 const autoItem=id=>AUTO_ITEMS.find(x=>x.id===id);
 /* dipanggil tiap frame saat ronde berjalan: pasang efek item di awal ronde, POTION aktif otomatis saat HP rendah */
 function autoItemTick(g){
@@ -9240,7 +9348,7 @@ function autoItemTick(g){
     for(const f of g.hc.fs){if(f.team!==0||f.out||!f.eq||f.eq==='heal')continue;const t=f.eq;f.eq=null;
       if(t==='dmg'){f.dbT=ITEM_CFG.dmgDur;floatText(f.x,f.y-44,'DAMAGE GANDA!','#ff9a30')}
       else if(t==='vamp'){f.vpT=8;floatText(f.x,f.y-44,'VAMPIR!','#ff4a5a')}
-      else if(t==='shield'){f.shT=6;floatText(f.x,f.y-44,'PERISAI!','#70eaff')}
+      else if(t==='shield'){void 0}
       else if(t==='ult'){f.ult=100;floatText(f.x,f.y-44,'ULTI PENUH!','#ff7aff')}
       else if(t==='speed'){f.boost=8;floatText(f.x,f.y-44,'SPEED UP!','#60d0ff')}
       else if(t==='sword'){f.weapon='sword';f.wT=12;floatText(f.x,f.y-44,'SWORD!','#ffffff')}
@@ -9479,7 +9587,7 @@ function brAvoid(g,f){
   if(f.onG&&grand()<.02)f.pressDir('u');/* sesekali lompat melewati rintangan */
 }
 /* V82: SUPPLY DROP battle royale. Peti emas berparasut jatuh di dalam zona aman; disentuh = terbuka, isi 3 item (1 ulti pinjaman, 1 senjata, 1 bantuan). */
-const BR_SUPPLY={pool:['copy','rand','revive','vamp','shield','poison','magnet'],w:[.2,.2,.14,.16,.12,.1,.08],n:3,ann:3.2};/* B1: isi supply drop = item langka dari pool BR (bobot di sini); n = jumlah item per peti; ann = lama pengumuman (detik) */
+const BR_SUPPLY={pool:['copy','rand','revive','vamp','poison','magnet'],w:[.2,.2,.14,.16,.1,.08],n:3,ann:3.2};/* B1: isi supply drop = item langka dari pool BR (bobot di sini); n = jumlah item per peti; ann = lama pengumuman (detik) */
 function brDropSpawn(g){
   const h=g.hc,lo=h.brLeft+60,hi=h.brRight-60;if(hi<lo+40)return;
   const x=Math.round(lo+grand()*(hi-lo)),gy=groundBelow(x,0);
@@ -9511,7 +9619,7 @@ function brItemsStep(g,dt){
       f.takeHit(q.o,{dmg:14,kb:140,stun:.45,down:1,hs:.12,sh:8},{sfx:'punch'},{x:f.x-8,y:f.y-12,w:16,h:12});break}}}
 }
 /* V87: STOK ULTI (BR). Meter penuh + terus memukul = mengisi stok ekstra (maks 3 total). Setelah ulti dipakai, stok berikutnya langsung siap. */
-const BR_SLOT={types:['heal','vamp','spring','poison','speed','shield','trap','magnet'],name:{heal:'HEAL',vamp:'VAMPIR',spring:'PEGAS',poison:'RACUN',speed:'SPEED UP',shield:'PERISAI',trap:'JEBAKAN',magnet:'MAGNET'}};/* B3: item yang bisa disimpan (ulti & nyawa extra tidak) */
+const BR_SLOT={types:['heal','vamp','spring','poison','speed','trap','magnet'],name:{heal:'HEAL',vamp:'VAMPIR',spring:'PEGAS',poison:'RACUN',speed:'SPEED UP',shield:'PERISAI',trap:'JEBAKAN',magnet:'MAGNET'}};/* B3: item yang bisa disimpan (ulti & nyawa extra tidak) */
 function brCanSlot(f){/* punya tombol slot? AI / pemain tanpa tombol = false -> item dipakai otomatis (tidak ada yang macet) */
   const g=G;if(!g||!f||f.ai)return false;if(NET.lock)return true;if(f===g.p)return true;
   return !!(g.vs2&&f===g.e&&!isTouch&&!document.body.classList.contains('touchui'))}
@@ -9585,7 +9693,7 @@ const BR_RARITY={of:{heal:0,speed:0,spring:0,trap:0,vamp:1,poison:1,shield:1,mag
   mul:[.6,2,4]};/* B4: pengali bobot per tingkat saat zona paling sempit (k=1); zona penuh (k=0) = 1 untuk semua. Antara keduanya linear. Semua angka kelangkaan BR ada di sini. */
 const brRarK=g=>{const h=g.hc;return clamp((brWd(g)-(h.brRight-h.brLeft))/(brWd(g)-h.brMinWidth),0,1)};/* 0 = zona penuh, 1 = zona terkecil */
 const brRarMul=(t,k)=>1+(BR_RARITY.mul[BR_RARITY.of[t]||0]-1)*k;
-const BR_LOOT={pool:['heal','vamp','spring','poison','speed','shield','trap','magnet','revive'],w:[.26,.2,.18,.16,.13,.12,.1,.1,.07],life:18};/* B2: loot petarung KO = 1 item dari pool BR, bukan ulti (copy/rand) */
+const BR_LOOT={pool:['heal','vamp','spring','poison','speed','trap','magnet','revive'],w:[.26,.2,.18,.16,.13,.1,.1,.07],life:18};/* B2: loot petarung KO = 1 item dari pool BR, bukan ulti (copy/rand) */
 const brItemCap=g=>{const h=g.hc,z=clamp((h.brRight-h.brLeft)/brWd(g),0,1);return BXM(g.map)?Math.max(3,Math.round(7*z)):Math.max(6,Math.round(24*Math.sqrt(z)))};/* batas item di arena (dipakai spawn & loot) */
 function brLootDrop(g,f){
   const h=g.hc;if(!h||h.k!=='br'||f.zoneKO||f.x<h.brLeft||f.x>h.brRight)return;/* tereliminasi zona / mati di luar zona: tanpa loot */
@@ -10186,7 +10294,7 @@ function twHud(c,g){const h=g.hc,tw=t=>h.ent.filter(e=>e.kind==='tower'&&e.team=
    (1) tombol "ATUR POSISI" di toko: seret hero di arena (sisi kiri / pijakan), posisi tersimpan tiap ronde
    (2) musuh yang kalah menjatuhkan item; hero hidup mengambilnya -> masuk TAS (maks 4), penuh = langsung dipakai
    ===================================================================== */
-const AUTO_DROP_CHANCE=.6,AUTO_DROP_LIFE=14,AUTO_DROP_POOL=[['heal',.24],['dmg',.2],['vamp',.18],['shield',.16],['speed',.15],['ult',.07]],AUTO_DROP_ICON={heal:'heal',dmg:'dmg',vamp:'vamp',shield:'shield',speed:'speed',ult:'rand'};
+const AUTO_DROP_CHANCE=.6,AUTO_DROP_LIFE=14,AUTO_DROP_POOL=[['heal',.24],['dmg',.2],['vamp',.18],['speed',.15],['ult',.07]],AUTO_DROP_ICON={heal:'heal',dmg:'dmg',vamp:'vamp',shield:'shield',speed:'speed',ult:'rand'};
 /* ---------- (1) ATUR POSISI ---------- */
 function autoSurfaces(x){
   const out=[],sol=curSolids(),ok=y=>!sol.some(s=>x>s.x&&x<s.x+s.w&&s.y<y-1&&s.y+s.h>y-1);
@@ -10378,7 +10486,7 @@ function autoSpawnDrop(g,f){
 function autoUseNow(g,f,id){/* TAS penuh: item langsung dipakai pengambil */
   if(id==='dmg'){f.dbT=ITEM_CFG.dmgDur;floatText(f.x,f.y-44,'DAMAGE GANDA!','#ff9a30')}
   else if(id==='vamp'){f.vpT=8;floatText(f.x,f.y-44,'VAMPIR!','#ff4a5a')}
-  else if(id==='shield'){f.shT=6;floatText(f.x,f.y-44,'PERISAI!','#70eaff')}
+  else if(id==='shield'){void 0}
   else if(id==='ult'){f.ult=100;floatText(f.x,f.y-44,'ULTI PENUH!','#ff7aff')}
   else if(id==='speed'){f.boost=8;floatText(f.x,f.y-44,'SPEED UP!','#60d0ff')}
   else if(id==='heal'){f.hp=Math.min(hpMax(f),f.hp+45);floatText(f.x,f.y-44,'+45 HP','#6aff6a');try{sfx('heal')}catch(_){}}}
@@ -10670,7 +10778,7 @@ function autoUseStash(){
   const f=al.reduce((a,b)=>b.hp<a.hp?b:a),t=inv.shift();
   if(t==='dmg'){f.dbT=ITEM_CFG.dmgDur;floatText(f.x,f.y-44,'DAMAGE GANDA!','#ff9a30')}
   else if(t==='vamp'){f.vpT=8;floatText(f.x,f.y-44,'VAMPIR!','#ff4a5a')}
-  else if(t==='shield'){f.shT=6;floatText(f.x,f.y-44,'PERISAI!','#70eaff')}
+  else if(t==='shield'){void 0}
   else if(t==='ult'){f.ult=100;floatText(f.x,f.y-44,'ULTI PENUH!','#ff7aff')}
   else if(t==='speed'){f.boost=8;floatText(f.x,f.y-44,'SPEED UP!','#60d0ff')}
   else if(t==='heal'){f.hp=Math.min(hpMax(f),f.hp+45);floatText(f.x,f.y-44,'POTION +45 HP','#6aff6a');sfx('heal')}
@@ -10801,14 +10909,14 @@ function autoFoeStats(g){
 /* ---------- SCOUTING MUSUH ---------- */
 function autoScoutText(g){
   const st=g.autoShop,e=g.e;if(!st||!e||!e.ch)return 'Musuh: ???';
-  if(st.round>=AUTO_MAX_ROUND)return '👑 Musuh: BOS WALUYO RAKSASA · waspada HENTAKAN (lompat/guard) & pasukan KANG PEL (muncul saat HP 75/45/20%)';
+  if(st.round>=AUTO_MAX_ROUND)return '👑 Musuh: BOS WALUYO RAKSASA · waspada HENTAKAN (lompat) & pasukan KANG PEL (muncul saat HP 75/45/20%)';
   const k=autoCls(e.ch),tip={k:'KEKAR: tahan damage, lambat → PISTOL & taktik SEIMBANG',l:'LINCAH: cepat → PEDANG/CAKRAM & taktik BERTAHAN',p:'PETARUNG: seimbang → pakai SERANG + ulti di saat tepat'}[k];
   let u='';try{u=' · Ulti '+autoUltInfo(e.ch.id).n}catch(_){}
   return 'Musuh: <b>'+e.ch.name+'</b> '+autoTag(e.ch)+' HP '+Math.ceil(e.ch.hp)+u+'<br>Saran: '+tip}
 
 /* =====================================================================
    V86: BOS WALUYO MONSTER - lebih besar & kuat, gerak berat ala raksasa (langkah mengguncang, tahan hentakan),
-   HENTAKAN RAKSASA (gelombang tanah, hindari dengan lompat/guard), mengamuk di HP rendah, dan MEMANGGIL PASUKAN KANG PEL
+   HENTAKAN RAKSASA (gelombang tanah, hindari dengan lompat), mengamuk di HP rendah, dan MEMANGGIL PASUKAN KANG PEL
    ===================================================================== */
 Object.assign(AUTO_BOSS,{hpMul:5.5,pow:1.35,bd:.9,big:2.0});
 const BOSS_MON={spd:.8,rageSpd:.92,stompEvery:8,stompWarn:.95,stompR:190,stompDmg:12,waves:[{hp:.75,n:2},{hp:.45,n:3},{hp:.2,n:3}],maxKP:4,kpHp:50,kpLife:22,rageHp:.35,fTSlow:.35};
@@ -10859,7 +10967,7 @@ function autoBossStomp(g,e,al){
   if(keep&&this.hp>0&&this.state!=='down'&&!this.attack){this.attack=keep;this.stun=Math.min(this.stun||0,.1)}
   if(this.hp>0&&this.state==='down'&&this.downT<900)this.downT=Math.min(this.downT,.45);
   return r}}
-/* aura gelap bos + cincin peringatan hentakan (zona merah = lompat atau guard!) */
+/* aura gelap bos + cincin peringatan hentakan (zona merah = lompat!) */
 {const _fd3=Fighter.prototype.draw;Fighter.prototype.draw=function(c){
   if(this.bossMon&&this.mn&&!this.out&&G&&G.autoShop&&G.phase!=='shop'&&this.hp>0){
     const M=this.mn,t=G.time||0,R=BOSS_MON.stompR;
@@ -10952,7 +11060,7 @@ function autoSummonAlly(g,hid,owner){
 /* toko: selalu ada item panggil (R 55% / SR 35% / SSR 10%), 25% peluang slot kedua */
 {const _ar2=autoRoll;autoRoll=function(g){
   _ar2(g);const o=g.autoShop&&g.autoShop.offers;if(!o)return;
-  const plain=['dmg','vamp','shield','ult','heal','speed'];
+  const plain=['dmg','vamp','ult','heal','speed'];
   for(let i=0;i<o.length;i++)if(o[i]&&o[i].indexOf('n:sm_')===0){const free=plain.filter(p=>!o.includes('n:'+p));o[i]='n:'+(free.length?free[Math.floor(Math.random()*free.length)]:'heal')}
   const put=()=>{const idx=[];o.forEach((x,i)=>{if(x&&x.indexOf('n:')===0&&!AUTO_WPN[x.slice(2)])idx.push(i)});if(!idx.length)return;
     const h=autoScrollPick(g);if(h)o[idx[Math.floor(Math.random()*idx.length)]]='s:'+h};
@@ -11042,7 +11150,7 @@ function autoMpBegin(g,again){
 function autoMpApplyItem(f,t){
   if(t==='dmg'){f.dbT=ITEM_CFG.dmgDur;floatText(f.x,f.y-44,'DAMAGE GANDA!','#ff9a30')}
   else if(t==='vamp'){f.vpT=8;floatText(f.x,f.y-44,'VAMPIR!','#ff4a5a')}
-  else if(t==='shield'){f.shT=6;floatText(f.x,f.y-44,'PERISAI!','#70eaff')}
+  else if(t==='shield'){void 0}
   else if(t==='ult'){f.ult=100;floatText(f.x,f.y-44,'ULTI PENUH!','#ff7aff')}
   else if(t==='speed'){f.boost=8;floatText(f.x,f.y-44,'SPEED UP!','#60d0ff')}
   else if(AUTO_WPN[t])autoGiveWeapon(f,t);
@@ -11162,7 +11270,7 @@ function autoSpRegacha(g){
    berdiri di atasnya saat ronde berjalan mendapat efeknya. Titik yang pernah ditemukan tetap terlihat samar di ronde berikutnya
    (aktif lagi tiap ronde), jadi pemain bisa menyusun posisi awal. Tata letak diundi SEKALI per pertandingan memakai grand()
    (deterministik di multiplayer: dipanggil di titik sinkron yang sama di kedua HP). */
-const AUTO_HID_T=[['heal',3,'HEAL +30%'],['shield',2,'PERISAI'],['dmg',2,'DAMAGE x2'],['vamp',1,'VAMPIR'],['speed',2,'SPEED UP'],['ult5',2,'ULTI +50'],['sword',1,'PEDANG'],['gun',1,'PISTOL'],['disc',1,'CAKRAM']];
+const AUTO_HID_T=[['heal',3,'HEAL +30%'],['dmg',2,'DAMAGE x2'],['vamp',1,'VAMPIR'],['speed',2,'SPEED UP'],['ult5',2,'ULTI +50'],['sword',1,'PEDANG'],['gun',1,'PISTOL'],['disc',1,'CAKRAM']];
 const AUTO_HID_Z=[[6,26,166],[84,156,150],[340,396,150],[454,474,166]];/* zona rahasia (lingkaran merah): atas peti kiri, platform kiri, platform kanan, atas peti kanan */
 function autoHidInit(g){
   const tw=AUTO_HID_T.reduce((a,x)=>a+x[1],0),out=[];
@@ -11826,8 +11934,54 @@ function mapV1Throw(f,b){b.owner=f;b.held=null;b.thrown=true;b.life=0;b.vx=f.fac
 }}
 /* tong tampil di arena, berada di bawah karakter saat dilempar/diangkat */
 {const _mapV1DrawWorld=drawWorld;drawWorld=function(g,c){mapV1InitBarrels(g);_mapV1DrawWorld(g,c);}}
+/* V140: MODE KILAT (cepat + listrik) & NAFAS PULIH (regen) dengan aura bergaya ulti */
+(function(){
+  const P=Fighter.prototype,_u=P.update,_s=P.stepAttack,_r=P.reset,_d=P.draw;
+  P.reset=function(){const r=_r.apply(this,arguments);this.klT=0;this.plT=0;return r};
+  P.update=function(dt,o){
+    if(!(this.klT>0)&&!(this.plT>0))return _u.apply(this,arguments);
+    if(G&&G.phase==='fight'){
+      const fx=FXL()>0,x=this.x,y=this.y;
+      this.kfT=(this.kfT||0)-dt;
+      if(this.klT>0){this.klT-=dt;
+        if(this.cd>0)this.cd=Math.max(0,this.cd-dt*(KL_ATK-1));
+        if(this.kfT<=0&&fx){this.kfT=.07;
+          boltFx(x+rnd(-12,12),y-rnd(8,20),x+rnd(-18,18),y-rnd(34,56),3,5,.13,1);
+          if(Math.random()<.4)boltFx(x+rnd(-10,10),y-110,x+rnd(-10,10),y-rnd(6,34),6,8,.2,2);
+          if(Math.abs(this.vx)>60)addP({k:'sq',x:x-Math.sign(this.vx)*8,y:y-rnd(4,36),vx:-this.vx*.2,vy:rnd(-20,20),g:0,life:.3,max:.3,z:2,col:Math.random()<.5?'#70eaff':'#ffffff'})}
+        if(this.klT<=0){this.klT=0;floatText(x,y-50,'KILAT HABIS','#9fdcff');burst(x,y-26,14,['#70eaff','#ffffff'],160,.5,100)}}
+      if(this.plT>0){this.plT-=dt;
+        if(this.kfT<=0&&fx){this.kfT=.07;addP({k:'sq',x:x+rnd(-12,12),y:y-rnd(0,10),vx:rnd(-6,6),vy:-rnd(50,110),g:-40,life:.7,max:.7,z:rint(2,3),col:Math.random()<.5?'#6aff6a':'#d8ffd8'})}
+        if(this.plT<=0){this.plT=0;floatText(x,y-50,'PULIH SELESAI','#b8ffb8')}}
+    }
+    if(this.klT>0){const sp=this.spd;this.spd=(sp||1)*KL_MOVE;try{return _u.apply(this,arguments)}finally{this.spd=sp}}
+    return _u.apply(this,arguments);
+  };
+  P.stepAttack=function(dt,o){return _s.call(this,this.klT>0?dt*KL_ATK:dt,o)};
+  P.draw=function(c){
+    const kl=this.klT>0,pl=this.plT>0;
+    if((!kl&&!pl)||this.out||FXL()<=0)return _d.apply(this,arguments);
+    const t=G.time||0,cx=Math.round(this.x),gy=Math.round(this.y),h=this.curH||40,cy=gy-h*.5,hw=Math.max((this.w||14)*.5,9),pu=.5+.5*Math.sin(t*12);
+    const life=kl?this.klT:this.plT,fo=life<1?(.55+.45*Math.sin(t*28)):1,rgb=kl?'112,234,255':'106,255,106',c1=kl?'#70eaff':'#6aff6a';
+    c.save();
+    c.globalCompositeOperation='lighter';c.globalAlpha=(.6+.25*pu)*fo;const gw=h*3.2;c.drawImage(ucGlowSpr(rgb),Math.round(cx-gw/2),Math.round(cy-gw/2),Math.round(gw),Math.round(gw));
+    c.globalCompositeOperation='source-over';
+    c.lineWidth=2;c.strokeStyle='#ffffff';
+    for(let j=0;j<2;j++){const ph=(t*1.6+j*.5)%1;c.globalAlpha=(1-ph)*.8*fo;c.beginPath();c.ellipse(cx,gy-1,hw*1.2+ph*hw*2.6,3+ph*7,0,0,6.283);c.stroke()}
+    if(kl){const sd=Math.floor(t*16);c.lineJoin='miter';
+      for(let j=0;j<4;j++){const rr=Math.sin(sd*12.989+j*78.233)*43758.5453,fr=rr-Math.floor(rr),a=(j*1.6+fr*3.2)%6.283,sx=cx+Math.cos(a)*hw*1.1,sy=cy+Math.sin(a)*h*.5,ln=h*(.3+.25*fr),ca=Math.cos(a),sa=Math.sin(a);let px=sx,py=sy;
+        c.beginPath();c.moveTo(px,py);for(let q=1;q<=4;q++){const f=q/4,jit=(q%2?1:-1)*h*.08*(1-f*.3);px=sx+ca*ln*f-sa*jit;py=sy+sa*ln*f+ca*jit;c.lineTo(px,py)}
+        c.globalAlpha=fo;c.strokeStyle=c1;c.lineWidth=2;c.stroke();c.strokeStyle='#ffffff';c.lineWidth=1;c.globalAlpha=.95*fo;c.stroke()}}
+    else{for(let j=0;j<8;j++){const ph=(t*.9+j*.125)%1,ex=cx+Math.sin(j*2.3+t)*hw*1.1,ey=gy-ph*h*1.6;c.globalAlpha=(1-ph)*fo;c.fillStyle=(j&1)?c1:'#ffffff';c.fillRect(Math.round(ex)-2,Math.round(ey),5,1);c.fillRect(Math.round(ex),Math.round(ey)-2,1,5)}
+      c.globalAlpha=.25*fo*(.6+.4*pu);c.fillStyle=c1;c.fillRect(cx-Math.round(hw*.8),gy-Math.round(h*1.7),Math.round(hw*1.6),Math.round(h*1.7))}
+    c.restore();
+    if(kl){c.save();c.translate(Math.round(Math.sin(t*70)*.8),0);try{return _d.apply(this,arguments)}finally{c.restore()}}
+    return _d.apply(this,arguments);
+  };
+})();
 init();
 })();
+
 </script>
 </body>
 </html>
